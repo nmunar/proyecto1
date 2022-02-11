@@ -21,14 +21,13 @@ POSTGRES = {
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:bd123@localhost/concursos'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Nikitos99@localhost/concursos'
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 api = Api(app)
 CORS(app)
 
 # Models
-
 
 class Administrador(db.Model):
     id = db.Column(db.Integer, primary_key=True)
