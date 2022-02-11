@@ -73,12 +73,13 @@ class Concurso_Schema(ma.Schema):
                   "fechaInicio", "fechaFin", "valorPagar", "guion", "recomendaciones")
 
 
-schema_concurso = Administrador_Schema()
-schema_concursos = Administrador_Schema(many=True)
+schema_concurso = Concurso_Schema()
+schema_concursos = Concurso_Schema(many=True)
 
-# Routes
+# --------------------------- Routes ---------------------------
 
 
+# Concursos
 @app.route('/api/<int:idAdmin>/concursos', methods=['GET', 'POST'])
 def concursos(idAdmin):
     if request.method == 'GET':
@@ -112,6 +113,42 @@ def concursos(idAdmin):
         db.session.add(concurso)
         db.session.commit()
         return {"id": concurso.id, "fechaCreacion": str(concurso.fechaCreacion)}, 201
+
+
+@app.route('/api/<int:idAdmin>/concursos/<int:idConcurso>', methods=['GET', 'PUT', 'DELETE'])
+def concurso(idAdmin, idConcurso):
+    concurso = Concurso.query.get_or_404(idConcurso)
+    if idAdmin != concurso.administrador_id:
+        return {"msg": "Solo se tiene acceso a sus propios concursos"}, 403
+
+    if request.method == 'GET':
+        return schema_concurso.dump(concurso)
+    elif request.method == 'PUT':
+        req = json.loads(request.data)
+        nombre = req.get('nombre', None)
+        imagen = req.get('imagen', None)
+        url = req.get('url', None)
+        fechaInicio = parser.parse(req.get('fechaInicio', None), ignoretz=True)
+        fechaFin = parser.parse(req.get('fechaFin', None), ignoretz=True)
+        if(fechaInicio > fechaFin):
+            return {"error": "La fecha de inicio es mayor a la de fin"}, 403
+        valorPagar = req.get('valorPagar', None)
+        guion = req.get('guion', None)
+        recomendaciones = req.get('recomendaciones', None)
+        concurso.nombre = nombre
+        concurso.imagen = imagen
+        concurso.url = url
+        concurso.fechaInicio = fechaInicio
+        concurso.fechaFin = fechaFin
+        concurso.valorPagar = valorPagar
+        concurso.guion = guion
+        concurso.recomendaciones = recomendaciones
+        db.session.commit()
+        return schema_concurso.dump(concurso), 200
+    else:
+        db.session.delete(concurso)
+        db.session.commit()
+        return '', 204
 
 
 if __name__ == '__main__':
