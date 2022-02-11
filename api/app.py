@@ -80,8 +80,8 @@ schema_concursos = Administrador_Schema(many=True)
 # Routes
 
 
-@app.route('/api/concursos', methods=['GET', 'POST'])
-def concursos():
+@app.route('/api/<int:idAdmin>/concursos', methods=['GET', 'POST'])
+def concursos(idAdmin):
     if request.method == 'GET':
         return schema_concursos.dumps(Concurso.query.all())
     elif request.method == 'POST':
@@ -95,6 +95,25 @@ def concursos():
         if(fechaInicio > fechaFin):
             return {"error": "La fecha de inicio es mayor a la de fin"}, 403
         valorPagar = req.get('valorPagar', None)
+        guion = req.get('guion', None)
+        recomendaciones = req.get('recomendaciones', None)
+        administrador_id = idAdmin
+        concurso = Concurso(
+            nombre=nombre,
+            imagen=imagen,
+            url=url,
+            fechaCreacion=fechaCreacion,
+            fechaInicio=fechaInicio,
+            fechaFin=fechaFin,
+            valorPagar=valorPagar,
+            guion=guion,
+            recomendaciones=recomendaciones,
+            administrador_id=administrador_id
+        )
+        db.session.add(concurso)
+        db.session.commit()
+        return {"id": concurso.id, "fechaCreacion": str(concurso.fechaCreacion)}, 201
+
 
 if __name__ == '__main__':
     app.run(debug=True)
