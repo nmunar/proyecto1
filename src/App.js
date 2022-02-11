@@ -7,11 +7,12 @@ import {
 import HomeConcurso from './components/HomeConcurso';
 
 function App() {
+
   return (
     <Router>
       <Routes>
         {/*Home Concursos*/}
-        <Route path="/home/concurso/:url" element={<HomeConcurso/>}></Route>
+        <Route path="/home/concurso/:url" element={<HomeConcurso />}></Route>
       </Routes>
     </Router>
   );
