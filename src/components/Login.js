@@ -22,6 +22,7 @@ export default function Login(props){
                     return
                 }
                 localStorage.setItem("email", mail)
+                localStorage.setItem("id_admin",json["id"])
                 localStorage.setItem("access_token", json["access_token"])
                 props.setLogged(true)
                 window.location.reload()
