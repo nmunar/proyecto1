@@ -10,7 +10,7 @@ function App() {
   const [isAuthenticatedApp, setAuthenticationApp] = useState(false);
   const [concursosList, setConcursosList] = useState([{}]);
   const [entra, setEntra] = useState(false);
-  const [logged, setLogged] = useState(false)
+  const [logged, setLogged] = useState(false);
 
   useEffect(() => {
     const access_token = localStorage.getItem("access_token")
@@ -133,7 +133,7 @@ function App() {
 
   return (
     <div className="App">
-      <NavbarComp funcAuth={changeAuthStatusLogin} />
+      <NavbarComp  logged = {logged} setLogged = {setLogged} funcAuth={changeAuthStatusLogin} />
       {isAuthenticatedApp ? (
         <>
           <Profile />

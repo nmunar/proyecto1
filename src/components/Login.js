@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
+import "bootstrap/dist/css/bootstrap.min.css";
+import { Modal, Button, Form } from "react-bootstrap";
 
 export default function Login(props){
+    const [show, setShow] = useState(false);
+  
+    const handleShow = () => setShow(true);
+    const handleClose = () => setShow(false);
+
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
 
     function login(evt){
-        evt.prebentDefault()
         if(!email.includes('@')){
             alert("Introduce a valid email")
             return
@@ -30,34 +36,63 @@ export default function Login(props){
                     alert('Failed login:'+err)
                 })
         })
-
-        return(
-            <div>
-                <form onSubmit={login}>
-                <TextField
-                    name="mail"
-                    label="Correo"
-                    id="mail"
-                    value={mail}
-                    onChange={evt => setEmail(evt.target.value)}
-                />
-                <TextField
-                    name="password"
-                    label="Contraseña"
-                    type="password"
-                    id="password"
-                    autoComplete="current-password"
-                    value={pass}
-                    onChange={evt => setPassword(evt.target.value)}
-                />
-                <Button
-                    type="submit"
-                    fullWidth
-                >
-                    Entrar
-                </Button>
-            </form>
-            </div>
-        )
     }
+
+    return(
+        <>
+        <Button variant="outline-success" onClick={handleShow}>Iniciar sesión</Button>
+        <Modal show={show}>
+            <Modal.Header>
+            <Modal.Title>Iniciar sesión</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+            <Form>
+                <Form.Group
+                className="mb-3"
+                controlId="formBasicEmail"
+                onChange={(evt) => setEmail(evt.target.value)}
+                >
+                <Form.Label>Correo</Form.Label>
+                <Form.Control
+                    type="text"
+                    placeholder="Ingresa tu correo electrónico"
+                />
+                </Form.Group>
+                <Form.Group
+                className="mb-3"
+                controlId="formBasicPassword"
+                onChange={(evt) => setPassword(evt.target.value)}
+                >
+                <Form.Label>Contraseña</Form.Label>
+                <Form.Control
+                    type="text"
+                    placeholder="Ingresa tu contraseña"
+                />
+                </Form.Group>
+                <Button
+                variant="primary"
+                onClick={() => {
+                    if (
+                    email == "" ||
+                    password == "" 
+                    ) {
+                    alert("Debe completar todos los campos.");
+                    } else {
+                    login();
+                    handleClose();
+                    }
+                }}
+                >
+                Iniciar sesión
+                </Button>
+            </Form>
+            </Modal.Body>
+            <Modal.Footer>
+            <Button onClick={handleClose} varian="secondary">
+                Cerrar
+            </Button>
+            </Modal.Footer>
+        </Modal>
+        </>
+    )
 }

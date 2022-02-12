@@ -7,6 +7,7 @@ from flask_marshmallow import Marshmallow
 from flask_restful import Api, Resource
 from datetime import datetime
 from dateutil import parser
+from flask_praetorian import Praetorian
 # from marshmallow_enum import EnumField
 from flask_cors.extension import CORS
 import json
@@ -21,9 +22,13 @@ POSTGRES = {
 
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'a random string'
+app.config['JWT_ACCESS_LIFESPAN'] = {'hours': 24}
+app.config['JWT_REFRESH_LIFESPAN'] = {'days': 30}
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:bd123@localhost/concursos'
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
+praetorian = Praetorian()
 api = Api(app)
 CORS(app)
 
@@ -39,6 +44,28 @@ class Administrador(db.Model):
     # relaciones
     concursos = db.relationship('Concurso', backref='administrador', lazy=1)
 
+    @property
+    def rolenames(self):
+        return []
+
+    @property
+    def password(self):
+        return self.contrasena
+
+    @classmethod
+    def lookup(cls, email):
+        return cls.query.filter_by(email=email).one_or_none()
+
+    @classmethod
+    def identify(cls, id):
+        return cls.query.get(id)
+
+    @property
+    def identity(self):
+        return self.id
+
+    def is_valid(self):
+        return True
 
 class Concurso(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -79,6 +106,34 @@ schema_concursos = Concurso_Schema(many=True)
 
 # --------------------------- Routes ---------------------------
 
+# userAdmin
+@app.route('/api/login', methods=['GET','POST'])
+def login():
+    req = json.loads(request.data)
+    email = req.get('email', None)
+    contrasena = req.get('contrasena', None)
+    admin = praetorian.authenticate(email, password)
+    return jsonify({'access_token': praetorian.enode_jwt_token(admin)}), 200
+
+@app.route('/api/register', methods=['POST'])
+def register():
+    req = json.loads(request.data)
+    nombres = req.get('nombres', None)
+    apellidos = req.get('apellidos', None)
+    email = req.get('email', None)
+    contrasena = req.get('contrasena', None)
+    if db.session.query(Administrador).filter_by(email=email).count() == 0:
+        db.session.add(Administrador(
+            nombres=nombres,
+            apellidos=apellidos,
+            email=email,
+            contrasena=praetorian.hash_password(contrasena)
+        ))
+        db.session.commit()
+        return {"msg": "Usuario creado"}, 201
+
+    else:
+        return {"msg": "Correo ya registrado"}, 400
 
 # Concursos
 @app.route('/api/<int:idAdmin>/concursos', methods=['GET', 'POST'])

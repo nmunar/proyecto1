@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
+import "bootstrap/dist/css/bootstrap.min.css";
+import { Modal, Button, Form } from "react-bootstrap";
 
 export default function Register(props){
+    const [show, setShow] = useState(false);
+  
+    const handleShow = () => setShow(true);
+    const handleClose = () => setShow(false);
+
 
     const [nombre, setNombre] = useState("")    
     const [apellido, setApellido] = useState("")
@@ -12,11 +19,11 @@ export default function Register(props){
         evt.preventDefault()
 
         if(!mail.includes('@')){
-            alert("Introduce a valid email")
+            alert("Introduzca un correo válido")
             return
         }
         if(password != confirmPassword){
-            alert("The passwords don't match")
+            alert("Las contraseñas no coinciden")
             return
         }
 
@@ -30,7 +37,7 @@ export default function Register(props){
             })
         }).then(resp=>{
             if(resp["status"] === 400){
-                alert("The email is already used")
+                alert("El correo ya esta en uso")
             }else{
                 return resp.json()
             }
@@ -39,48 +46,102 @@ export default function Register(props){
                 return
             props.setOpen(false)
         }).catch(err => {
-            alert('Bad sign up : '+err)
+            alert('Fallo en el registro: '+err)
         })
     }
 
     return(
-        <form onSubmit={register}>
-            <TextField
-                    name="nombre"
-                    id="nombre"
-                    label="Nombres"
-                    value={nombre}
-                    onChange={evt => setNombre(evt.target.value)}
+        <>
+        <Button variant="outline-success" onClick={handleShow}>Registrase</Button>
+        <Modal show={show}>
+            <Modal.Header>
+            <Modal.Title>Registrarse</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+            <Form>
+                <Form.Group
+                className="mb-3"
+                controlId="formBasicNombre"
+                onChange={(evt) => setNombre(evt.target.value)}
+                >
+                <Form.Label>Nombres</Form.Label>
+                <Form.Control
+                    type="text"
+                    placeholder="Ingresa tus nombres"
                 />
-            <TextField
-                    name="apellido"
-                    id="apellido"
-                    label="Apellidos"
-                    value={apellido}
-                    onChange={evt => setApellido(evt.target.value)}
+                </Form.Group>
+                <Form.Group
+                className="mb-3"
+                controlId="formBasicApellido"
+                onChange={(evt) => setApellido(evt.target.value)}
+                >
+                <Form.Label>Apellidos</Form.Label>
+                <Form.Control
+                    type="text"
+                    placeholder="Ingresa tus apellidos"
                 />
-            <TextField
-                    name="email"
-                    id="email"
-                    label="Correo"
-                    value={email}
-                    onChange={evt => setEmail(evt.target.value)}
+                </Form.Group>
+                <Form.Group
+                className="mb-3"
+                controlId="formBasicEmail"
+                onChange={(evt) => setEmail(evt.target.value)}
+                >
+                <Form.Label>Correo</Form.Label>
+                <Form.Control
+                    type="text"
+                    placeholder="Ingresa tu correo electrónico"
                 />
-            <TextField
-                    name="password"
-                    id="password"
-                    label="Contraseña"
-                    value={password}
-                    onChange={evt => setPassword(evt.target.value)}
+                </Form.Group>
+                <Form.Group
+                className="mb-3"
+                controlId="formBasicPassword"
+                onChange={(evt) => setPassword(evt.target.value)}
+                >
+                <Form.Label>Contraseña</Form.Label>
+                <Form.Control
+                    type="text"
+                    placeholder="Ingresa tu contraseña"
                 />
-            <TextField
-                    name="confirmPassword"
-                    id="confirmPassword"
-                    label="Verificar contraseña"
-                    value={confirmPassword}
-                    onChange={evt => setConfirmPassword(evt.target.value)}
+                </Form.Group>
+                <Form.Group
+                className="mb-3"
+                controlId="formBasicConfirmPassword"
+                onChange={(evt) => setConfirmPassword(evt.target.value)}
+                >
+                <Form.Label>Verificar contraseña</Form.Label>
+                <Form.Control
+                    type="text"
+                    placeholder="Verifica tu contraseña"
                 />
-        </form>
+                </Form.Group>
+                <Button
+                variant="primary"
+                onClick={() => {
+                    if (
+                    nombre == "" ||
+                    apellido == "" ||
+                    email == "" ||
+                    password == "" ||
+                    confirmPassword == ""
+                    ) {
+                    alert("Debe completar todos los campos.");
+                    } else {
+                    props.register();
+                    handleClose();
+                    }
+                }}
+                >
+                Registrarse
+                </Button>
+            </Form>
+            </Modal.Body>
+            <Modal.Footer>
+            <Button onClick={handleClose} varian="secondary">
+                Cerrar
+            </Button>
+            </Modal.Footer>
+        </Modal>
+        </>
     )
         
 }

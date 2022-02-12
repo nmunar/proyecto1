@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { Navbar, Container } from "react-bootstrap";
+import Login from "./Login";
 import LoginButton from "./LoginButton";
+import Register from "./Register";
 
-function Options(logged, setLogged){
+function Options(logged, setLogged,funcAuth){
   const [login, setLogin] = useState(false)
   const [register, setRegister] = useState(false)
 
@@ -14,7 +16,11 @@ function Options(logged, setLogged){
 
   if(!logged){
       return(
-          <div></div>
+        <>
+        <LoginButton funcAuth={funcAuth} />
+        <Login setLogged = {setLogged} />
+        <Register />
+        </>
       )
   }
   else{
@@ -29,8 +35,8 @@ const NavbarComp = (props) => {
   return (
     <Navbar variant="dark" bg="dark" expand="lg">
       <Container>
-        <Navbar.Brand>Concursos</Navbar.Brand>
-        <LoginButton funcAuth={props.funcAuth} />
+        <Navbar.Brand>SuperVoices</Navbar.Brand>
+        {Options(props.logged, props.setLogged, props.funcAuth)}
       </Container>
     </Navbar>
   );
