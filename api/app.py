@@ -27,7 +27,7 @@ ma = Marshmallow(app)
 api = Api(app)
 CORS(app)
 
-# Models
+# --------------------------- Models ---------------------------
 
 
 class Administrador(db.Model):
@@ -56,7 +56,7 @@ class Concurso(db.Model):
         db.Integer, db.ForeignKey('administrador.id'), nullable=0)
 
 
-# Schemas
+# --------------------------- Schemas ---------------------------
 
 
 class Administrador_Schema(ma.Schema):
@@ -128,7 +128,6 @@ def concurso(idAdmin, idConcurso):
         req = json.loads(request.data)
         nombre = req.get('nombre', None)
         imagen = req.get('imagen', None)
-        url = req.get('url', None)
         fechaInicio = parser.parse(req.get('fechaInicio', None), ignoretz=True)
         fechaFin = parser.parse(req.get('fechaFin', None), ignoretz=True)
         if(fechaInicio > fechaFin):
@@ -138,7 +137,6 @@ def concurso(idAdmin, idConcurso):
         recomendaciones = req.get('recomendaciones', None)
         concurso.nombre = nombre
         concurso.imagen = imagen
-        concurso.url = url
         concurso.fechaInicio = fechaInicio
         concurso.fechaFin = fechaFin
         concurso.valorPagar = valorPagar
