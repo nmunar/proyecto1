@@ -53,6 +53,30 @@ class Concurso(db.Model):
     # relaciones
     administrador_id = db.Column(
         db.Integer, db.ForeignKey('administrador.id'), nullable=0)
+    voces = db.relationship('Voz', backref='concurso', cascade="all, delete", lazy=1)
+
+#Voz
+class Voz(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    fechaCreacion = db.Column(db.DateTime, nullable=0)
+    email = db.Column(db.String(120), nullable=0)
+    nombres = db.Column(db.String(220), nullable=0)
+    apellidos = db.Column(db.String(220), nullable=0)
+    observaciones = db.Column(db.String(1000))
+    # relaciones
+    concursoId = db.Column(db.Integer, db.ForeignKey('concurso.id'), nullable=0)
+    archivoId = db.Column(db.Integer, db.ForeignKey('archivoVoz.id'), nullable=0)
+    
+
+class ArchivoVoz(db.Model):
+    __tablename__='archivoVoz'
+    id = db.Column(db.Integer, primary_key=True)
+    archivoOriginal = db.Column(db.String(120), nullable=1)
+    archivoConvertido = db.Column(db.String(120), nullable=1)
+    convertido = db.Column(db.Boolean, nullable=0, default=0)
+    # relaciones
+    voz = db.relationship('Voz',backref=db.backref('archivoVoz', cascade="all, delete"), uselist=False, lazy=1)
+
 
 
 # Schemas
@@ -75,6 +99,31 @@ class Concurso_Schema(ma.Schema):
 
 schema_concurso = Concurso_Schema()
 schema_concursos = Concurso_Schema(many=True)
+
+
+class ArchivoVozSchema(ma.Schema):
+    class Meta:
+        fields = ("id", "convertido","archivoOriginal", "archivoConvertido")
+
+
+schema_archivoVoz = ArchivoVozSchema()
+schema_archivosVoz = ArchivoVozSchema(many=1)
+
+class Voz_Schema(ma.Schema):
+    class Meta:
+        fields = ("id", "fechaCreacion", "email", "nombres", "apellidos",
+         "convertida", "observaciones", "concursoId", "archivoId")
+
+class Voz_SchemaSeguro(ma.Schema):
+    class Meta:
+        fields = ("fechaCreacion", "archivoId")
+
+schema_voz = Voz_Schema()
+schema_voces = Voz_Schema(many=1)
+schemaSeguro_voz = Voz_SchemaSeguro(many=1)
+
+
+
 
 # --------------------------- Routes ---------------------------
 

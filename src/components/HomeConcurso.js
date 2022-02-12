@@ -179,8 +179,7 @@ export default function HomeConcurso() {
                             <Navbar.Brand >Entradas</Navbar.Brand>
                         </Container>
                     </Navbar>
-
-                                    
+                                                        
                 </div>
 
             );
