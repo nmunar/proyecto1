@@ -1,12 +1,9 @@
 import React, { useState } from "react";
-import { Navbar, Container } from "react-bootstrap";
+import { Navbar, Container, Button } from "react-bootstrap";
 import Login from "./Login";
-import LoginButton from "./LoginButton";
 import Register from "./Register";
 
-function Options(logged, setLogged,funcAuth){
-  const [login, setLogin] = useState(false)
-  const [register, setRegister] = useState(false)
+function Options(logged, setLogged){
 
   function logOut(){
       setLogged(false)
@@ -17,8 +14,7 @@ function Options(logged, setLogged,funcAuth){
   if(!logged){
       return(
         <>
-        <LoginButton funcAuth={funcAuth} />
-        <Login setLogged = {setLogged} />
+        <Login logged = {logged} setLogged = {setLogged} />
         <Register />
         </>
       )

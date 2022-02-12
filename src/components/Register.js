@@ -16,9 +16,8 @@ export default function Register(props){
     const [confirmPassword, setConfirmPassword] = useState("")
 
     function register(evt){
-        evt.preventDefault()
 
-        if(!mail.includes('@')){
+        if(!email.includes('@')){
             alert("Introduzca un correo válido")
             return
         }
@@ -27,13 +26,13 @@ export default function Register(props){
             return
         }
 
-        fetch('api/register',{
+        fetch("http://127.0.0.1:5000/api/register",{
             method:"POST",
-            body: JSON.stringfy({
-                nombres: pNombre,
-                apellidos: pApellido,
-                email: pEmail,
-                contrasena: pPassword
+            body: JSON.stringify({
+                nombres: nombre,
+                apellidos: apellido,
+                email: email,
+                contrasena: password
             })
         }).then(resp=>{
             if(resp["status"] === 400){
@@ -44,7 +43,6 @@ export default function Register(props){
         }).then(json => {
             if(json === undefined)
                 return
-            props.setOpen(false)
         }).catch(err => {
             alert('Fallo en el registro: '+err)
         })
@@ -126,7 +124,7 @@ export default function Register(props){
                     ) {
                     alert("Debe completar todos los campos.");
                     } else {
-                    props.register();
+                    register();
                     handleClose();
                     }
                 }}

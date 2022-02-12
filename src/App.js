@@ -7,7 +7,6 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 
 function App() {
-  const [isAuthenticatedApp, setAuthenticationApp] = useState(false);
   const [concursosList, setConcursosList] = useState([{}]);
   const [entra, setEntra] = useState(false);
   const [logged, setLogged] = useState(false);
@@ -35,7 +34,7 @@ function App() {
       nombre.replace(/\s/g, "") +
       parseInt(seconds).toString();
     axios
-      .post("http://127.0.0.1:5000/api/1/concursos", {
+      .post("http://127.0.0.1:5000/api/concursos", {
         nombre: nombre,
         imagen: imagen,
         url: url,
@@ -44,6 +43,10 @@ function App() {
         valorPagar: valorPagar,
         guion: guion,
         recomendaciones: recomendaciones,
+      },{
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+      }
       })
       .then((response) => {
         let newConcursos = [...concursosList];
@@ -75,7 +78,7 @@ function App() {
     recomendaciones
   ) => {
     axios
-      .put("http://127.0.0.1:5000/api/1/concursos/" + idC, {
+      .put("http://127.0.0.1:5000/api/concursos/" + idC, {
         nombre: nombre,
         imagen: imagen,
         fechaInicio: fechaInicio,
@@ -83,6 +86,10 @@ function App() {
         valorPagar: valorPagar,
         guion: guion,
         recomendaciones: recomendaciones,
+      },{
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+      }
       })
       .then(() => {
         let newConcursos = [...concursosList];
@@ -106,7 +113,11 @@ function App() {
 
   //Cambiar el id del usuario
   const deleteConcurso = (idC) => {
-    axios.delete("/api/1/concursos/" + idC).then(() => {
+    axios.delete("http://127.0.0.1:5000/api/concursos/" + idC, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+    }
+    }).then(() => {
       let newConcursos = [...concursosList];
       for (var i = 0; i < concursosList.length; i++) {
         if (concursosList[i].id == idC) {
@@ -117,24 +128,26 @@ function App() {
     });
   };
 
-  if (isAuthenticatedApp) {
+  
+
+  if (logged) {
     if (entra == false) {
       setEntra(true);
       //Cambiar el id del usuario
-      axios.get("/api/1/concursos").then((response) => {
+      axios.get("http://127.0.0.1:5000/api/concursos", {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+      }
+      }).then((response) => {
         setConcursosList(response.data);
       });
     }
   }
 
-  const changeAuthStatusLogin = (status) => {
-    setAuthenticationApp(status);
-  };
-
   return (
     <div className="App">
-      <NavbarComp  logged = {logged} setLogged = {setLogged} funcAuth={changeAuthStatusLogin} />
-      {isAuthenticatedApp ? (
+      <NavbarComp  logged = {logged} setLogged = {setLogged} />
+      {logged ? (
         <>
           <Profile />
           <TableComp

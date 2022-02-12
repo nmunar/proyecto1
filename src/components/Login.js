@@ -17,25 +17,26 @@ export default function Login(props){
             return
         }
 
-        fetch('/login',{
+        fetch("http://127.0.0.1:5000/api/login",{
             method: 'POST',
             body: JSON.stringify({
                 email: email,
                 contrasena: password
-            }).then(resp => resp.json()).then(json=>{
-                if(json["status_code"] == 401){
-                    alert("The email or the password doesn't match")
-                    return
-                }
-                localStorage.setItem("email", mail)
-                localStorage.setItem("id_admin",json["id"])
-                localStorage.setItem("access_token", json["access_token"])
-                props.setLogged(true)
-                window.location.reload()
-            }).cath(err =>{
-                    alert('Failed login:'+err)
-                })
+            })
+        }).then(resp => resp.json()).then(json=>{
+            if(json["status_code"] == 401){
+                alert("The email or the password doesn't match")
+                return
+            }
+            localStorage.setItem("email", email)
+            localStorage.setItem("access_token", json["access_token"])
+            props.setLogged(true)
+            window.location.reload()
+        }).cath(err =>{
+            alert('Failed login:'+err)
         })
+
+        
     }
 
     return(
