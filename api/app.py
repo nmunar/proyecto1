@@ -150,6 +150,16 @@ def concurso(idAdmin, idConcurso):
         db.session.commit()
         return '', 204
 
+@app.route('/api/concurso/<string:url_c>', methods=['GET'])
+def concursoConUrl(url_c):
+    now = datetime.now()
+    print(url_c)
+    concurso = Concurso.query.filter_by(url=url_c).filter(Concurso.fechaFin > now).first()
+    if not concurso:
+        return jsonify({"msg":"No existe ningun concurso activo con la url especificada"}),404
+    return schema_concurso.dump(concurso),200
+
+   
 
 if __name__ == '__main__':
     app.run(debug=True)
