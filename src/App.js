@@ -1,22 +1,26 @@
 import logo from './logo.svg';
 import './App.css';
+import NavigationBar from './components/NavBar';
+import React, { useState, useEffect } from 'react';
 
 function App() {
+  const [logged, setLogged] = useState(false)
+
+  useEffect(() => {
+    const access_token = localStorage.getItem("access_token")
+    if(access_token)
+      setLogged(true)
+  },[])
+
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+    <div>
+      <NavigationBar
+        logged = {logged}
+        setLogged = {setLogged}
+      />
+      <header >
+        
       </header>
     </div>
   );
