@@ -97,7 +97,7 @@ export default function Register(props){
                 >
                 <Form.Label>Contraseña</Form.Label>
                 <Form.Control
-                    type="text"
+                    type="password"
                     placeholder="Ingresa tu contraseña"
                 />
                 </Form.Group>
@@ -108,7 +108,7 @@ export default function Register(props){
                 >
                 <Form.Label>Verificar contraseña</Form.Label>
                 <Form.Control
-                    type="text"
+                    type="password"
                     placeholder="Verifica tu contraseña"
                 />
                 </Form.Group>
