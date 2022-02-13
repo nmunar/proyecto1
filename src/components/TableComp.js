@@ -186,6 +186,7 @@ const TableComp = (props) => {
                     recomendaciones
                   );
                   handleClose();
+                  window.location.reload();
                 }
               }}
             >

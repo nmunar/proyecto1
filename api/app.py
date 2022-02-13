@@ -7,13 +7,15 @@ from flask_marshmallow import Marshmallow
 from flask_restful import Api, Resource
 from datetime import datetime
 from dateutil import parser
+import flask_praetorian
 # from marshmallow_enum import EnumField
 from flask_cors.extension import CORS
 import json
+from flask_praetorian import auth_required, current_user
 
 POSTGRES = {
     'user': 'postgres',
-    'pw': 'bd123',
+    'pw': 'admin',
     'db': 'concursos',
     'host': 'localhost',
     'port': '5432',
@@ -21,9 +23,13 @@ POSTGRES = {
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:bd123@localhost/concursos'
+app.config['SECRET_KEY'] = 'a random string'
+app.config['JWT_ACCESS_LIFESPAN'] = {'hours': 24}
+app.config['JWT_REFRESH_LIFESPAN'] = {'days': 30}
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:admin@localhost/concursos'
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
+guard = flask_praetorian.Praetorian()
 api = Api(app)
 CORS(app)
 
@@ -38,6 +44,29 @@ class Administrador(db.Model):
     contrasena = db.Column(db.String(300), nullable=0)
     # relaciones
     concursos = db.relationship('Concurso', backref='administrador', lazy=1)
+
+    @property
+    def rolenames(self):
+        return []
+
+    @property
+    def password(self):
+        return self.contrasena
+
+    @classmethod
+    def lookup(cls, email):
+        return cls.query.filter_by(email=email).one_or_none()
+
+    @classmethod
+    def identify(cls, id):
+        return cls.query.get(id)
+
+    @property
+    def identity(self):
+        return self.id
+
+    def is_valid(self):
+        return True
 
 
 class Concurso(db.Model):
@@ -79,10 +108,45 @@ schema_concursos = Concurso_Schema(many=True)
 
 # --------------------------- Routes ---------------------------
 
+guard.init_app(app, Administrador)
+
+# userAdmin
+@app.route('/api/login', methods=['POST'])
+def login():
+    req = json.loads(request.data)
+    email = req.get('email', None)
+    contrasena = req.get('contrasena', None)
+    admin = guard.authenticate(email, contrasena)
+    return jsonify({'access_token': guard.encode_jwt_token(admin)}), 200
+
+@app.route('/api/register', methods=['POST'])
+def register():
+    req = json.loads(request.data)
+    nombres = req.get('nombres', None)
+    apellidos = req.get('apellidos', None)
+    email = req.get('email', None)
+    contrasena = req.get('contrasena', None)
+    if db.session.query(Administrador).filter_by(email=email).count() == 0:
+        db.session.add(Administrador(
+            nombres=nombres,
+            apellidos=apellidos,
+            email=email,
+            contrasena=guard.hash_password(contrasena)
+        ))
+        db.session.commit()
+        return {"msg": "Usuario creado"}, 201
+
+    else:
+        return {"msg": "Correo ya registrado"}, 400
 
 # Concursos
-@app.route('/api/<int:idAdmin>/concursos', methods=['GET', 'POST'])
-def concursos(idAdmin):
+@app.route('/api/concursos', methods=['GET', 'POST'])
+@auth_required
+def concursos():
+    user = current_user()
+    print(user.id)
+    if(user.id != user.id):
+        return {"msg":"Solo se pueden acceder a concursos propios"},403
     if request.method == 'GET':
         return schema_concursos.dumps(Concurso.query.all())
     elif request.method == 'POST':
@@ -98,7 +162,7 @@ def concursos(idAdmin):
         valorPagar = req.get('valorPagar', None)
         guion = req.get('guion', None)
         recomendaciones = req.get('recomendaciones', None)
-        administrador_id = idAdmin
+        administrador_id = user.id
         concurso = Concurso(
             nombre=nombre,
             imagen=imagen,
@@ -116,10 +180,12 @@ def concursos(idAdmin):
         return {"id": concurso.id, "fechaCreacion": str(concurso.fechaCreacion)}, 201
 
 
-@app.route('/api/<int:idAdmin>/concursos/<int:idConcurso>', methods=['GET', 'PUT', 'DELETE'])
-def concurso(idAdmin, idConcurso):
+@app.route('/api/concursos/<int:idConcurso>', methods=['GET', 'PUT', 'DELETE'])
+@auth_required
+def concurso(idConcurso):
+    user = current_user()
     concurso = Concurso.query.get_or_404(idConcurso)
-    if idAdmin != concurso.administrador_id:
+    if user.id != concurso.administrador_id:
         return {"msg": "Solo se tiene acceso a sus propios concursos"}, 403
 
     if request.method == 'GET':

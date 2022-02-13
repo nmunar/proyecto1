@@ -121,7 +121,8 @@ const ModalFunc = (props) => {
                     guion,
                     recomendaciones
                   );
-                  handleClose();
+                  handleClose();                  
+                  window.location.reload()
                 }
               }}
             >
