@@ -89,8 +89,6 @@ class Concurso(db.Model):
                             cascade="all, delete", lazy=1)
 
 # Voz
-
-
 class Voz(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     fechaCreacion = db.Column(db.DateTime, nullable=0)
@@ -215,7 +213,7 @@ def concursos():
         url = req.get('url', None)
         fechaCreacion = datetime.now()
         fechaInicio = parser.parse(req.get('fechaInicio', None), ignoretz=True)
-        fechaFin = parser.parse(req.get('fechaInicio', None), ignoretz=True)
+        fechaFin = parser.parse(req.get('fechaFin', None), ignoretz=True)
         if(fechaInicio > fechaFin):
             return {"error": "La fecha de inicio es mayor a la de fin"}, 403
         valorPagar = req.get('valorPagar', None)
@@ -281,6 +279,8 @@ def concursoConUrl(url_c):
     print(url_c)
     concurso = Concurso.query.filter_by(
         url=url_c).filter(Concurso.fechaFin > now).first()
+    print(str(Concurso.fechaFin))
+    print(now)
     if not concurso:
         return jsonify({"msg": "No existe ningun concurso activo con la url especificada"}), 404
     return schema_concurso.dump(concurso), 200
