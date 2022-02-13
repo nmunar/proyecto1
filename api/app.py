@@ -27,6 +27,8 @@ ma = Marshmallow(app)
 api = Api(app)
 CORS(app)
 
+extensions = ['wav', 'mp3', 'aac', 'ogg']
+
 # Models
 
 
@@ -244,6 +246,14 @@ def vocesArch(id_v):
     else:
         return send_file(archivo.archivoConvertido),200
     
+@app.route('/api/audio/', methods=['POST'])
+def vocesArch():
+    if not 'archivoOriginal' in request.files:
+        return jsonify({"msg": "La peticion debe tener un archivo"}), 404
+    filen = request.files['file'].filename
+    ext = filen.split('.')[1].lower() if '.' in filen else ''
+    
+
 
 if __name__ == '__main__':
     app.run(debug=True)
