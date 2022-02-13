@@ -26,7 +26,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'a random string'
 app.config['JWT_ACCESS_LIFESPAN'] = {'hours': 24}
 app.config['JWT_REFRESH_LIFESPAN'] = {'days': 30}
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:admin@localhost/concursos'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:bd123@localhost/concursos'
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 guard = flask_praetorian.Praetorian()
@@ -111,6 +111,8 @@ schema_concursos = Concurso_Schema(many=True)
 guard.init_app(app, Administrador)
 
 # userAdmin
+
+
 @app.route('/api/login', methods=['POST'])
 def login():
     req = json.loads(request.data)
@@ -118,6 +120,7 @@ def login():
     contrasena = req.get('contrasena', None)
     admin = guard.authenticate(email, contrasena)
     return jsonify({'access_token': guard.encode_jwt_token(admin)}), 200
+
 
 @app.route('/api/register', methods=['POST'])
 def register():
@@ -140,13 +143,15 @@ def register():
         return {"msg": "Correo ya registrado"}, 400
 
 # Concursos
+
+
 @app.route('/api/concursos', methods=['GET', 'POST'])
 @auth_required
 def concursos():
     user = current_user()
     print(user.id)
     if(user.id != user.id):
-        return {"msg":"Solo se pueden acceder a concursos propios"},403
+        return {"msg": "Solo se pueden acceder a concursos propios"}, 403
     if request.method == 'GET':
         return schema_concursos.dumps(Concurso.query.all())
     elif request.method == 'POST':
