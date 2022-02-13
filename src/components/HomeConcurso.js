@@ -13,11 +13,11 @@ export default function HomeConcurso() {
     const [obs, setObsE] = useState("")
     const [key, setKey] = useState('home');
     const [validated, setValidated] = useState(false);
-
-    const [archVoz, setArchVoz] = useState("");
-
-
+    const [archVoz, setArchVoz] = useState(null);
     const [postulacion, setPostularme] = useState(false)
+    const [pagination, setPagination] = useState()
+    const [audios, setAudios] = useState([])
+    const [hizoFecth, setFecth] = useState(false)
 
     let { url } = useParams();
 
@@ -26,25 +26,90 @@ export default function HomeConcurso() {
         async function getCData() {
 
             //get concurso
-            console.log(url);
-            let resp = await fetch(`/api/concurso/${url}`)
-            if (resp['status'] !== 200) {
-                alert(resp['msg'])
+            let res = await fetch(`/api/concurso/${url}`)
+            let data = await res.json()
+
+            if (res['status'] !== 200) {
+                alert(data['msg'])
                 return
             }
-            let data = await resp.json()
+
             setConcurso(data)
             setId(data.id)
             setImg(data.imagen)
 
             //get voces
+            let resp = await fetch(`/api/voces/${data.id}`)
+            let json = await resp.json()
+
+            if (resp['status'] !== 200) {
+                alert(json['msg'])
+                return
+            }
+
+            console.log(json)
+            const vocesF = json['voces']
+            //archvivos convertidos
+            let audios = []
+            for (let voz of vocesF) {
+                console.log(voz)
+                let respon = await fetch(`/api/audio/${voz.id}?convertido=1`)
+                let respblob = await respon.blob()
+
+                audios.push({
+                    url: respblob
+                })
+            }
+
+            console.log(audios)
+            setAudios(audios)
+            setPagination(Math.ceil(audios.length / 20))
+
+
         }
         getCData()
     }
         , [url])
 
-    function subirPostulacion() {
+    if (validated) {
+        subirPostulacion()
+    }
+
+    function cargarAudios() {
+        if (audios.length && hizoFecth) {
+
+
+        } else if (!audios.length && hizoFecth) {
+
+
+
+        } else {
+
+        }
+
         console.log("arriba los compas")
+    }
+
+    async function subirPostulacion() {
+
+        // fetch envio audio
+        var data = new FormData()
+        data.append('archivoOriginal', archVoz)
+        const response = await fetch('/api/audio', {
+            method: "POST",
+            body: data
+        })
+
+        const json = await response.json()
+
+        const data2 = {
+            email: emailE,
+            nombres: nombreE,
+            apellidos: apellidoE,
+            observaciones: obs,
+            concursoId: idC,
+            archivoId:json.id
+        }
     }
 
     const handleSubmit = (event) => {
@@ -52,13 +117,8 @@ export default function HomeConcurso() {
         if (form.checkValidity() === false) {
             event.preventDefault();
             event.stopPropagation();
-        }else{
-            subirPostulacion(); 
-            setValidated(true);
         }
-        
-        
-        
+        setValidated(true);
     };
 
     function concursoC() {
@@ -150,7 +210,7 @@ export default function HomeConcurso() {
                                     <Form.Control required type="file" onChange={evt => {
                                         var ext = evt.target.value.split('.').pop();
                                         ext = ext.toLowerCase();
-                                        let vext = ['wav', 'mp3', 'aac', 'm4a', 'ogg'];
+                                        let vext = ['wav', 'mp3', 'aac', 'ogg'];
                                         if (vext.indexOf(ext) === -1) {
                                             alert("formato no valido de archivo")
                                             setArchVoz("")
@@ -173,13 +233,13 @@ export default function HomeConcurso() {
                             </Form>
                         </Modal.Body>
                     </Modal>
-                   {/* AUDIOS */}
-                   <Navbar expand="lg" bg="primary" variant="dark">
+                    {/* AUDIOS */}
+                    <Navbar expand="lg" bg="primary" variant="dark">
                         <Container>
                             <Navbar.Brand >Entradas</Navbar.Brand>
                         </Container>
                     </Navbar>
-                                                        
+
                 </div>
 
             );

@@ -1,7 +1,7 @@
 # import enum
 from enum import unique
 from xmlrpc.client import DateTime
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_restful import Api, Resource
@@ -29,6 +29,7 @@ CORS(app)
 
 # Models
 
+
 class Administrador(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombres = db.Column(db.String(220), nullable=0)
@@ -53,9 +54,12 @@ class Concurso(db.Model):
     # relaciones
     administrador_id = db.Column(
         db.Integer, db.ForeignKey('administrador.id'), nullable=0)
-    voces = db.relationship('Voz', backref='concurso', cascade="all, delete", lazy=1)
+    voces = db.relationship('Voz', backref='concurso',
+                            cascade="all, delete", lazy=1)
 
-#Voz
+# Voz
+
+
 class Voz(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     fechaCreacion = db.Column(db.DateTime, nullable=0)
@@ -64,19 +68,21 @@ class Voz(db.Model):
     apellidos = db.Column(db.String(220), nullable=0)
     observaciones = db.Column(db.String(1000))
     # relaciones
-    concursoId = db.Column(db.Integer, db.ForeignKey('concurso.id'), nullable=0)
-    archivoId = db.Column(db.Integer, db.ForeignKey('archivoVoz.id'), nullable=0)
-    
+    concursoId = db.Column(
+        db.Integer, db.ForeignKey('concurso.id'), nullable=0)
+    archivoId = db.Column(db.Integer, db.ForeignKey(
+        'archivoVoz.id'), nullable=0)
+
 
 class ArchivoVoz(db.Model):
-    __tablename__='archivoVoz'
+    __tablename__ = 'archivoVoz'
     id = db.Column(db.Integer, primary_key=True)
     archivoOriginal = db.Column(db.String(120), nullable=1)
     archivoConvertido = db.Column(db.String(120), nullable=1)
     convertido = db.Column(db.Boolean, nullable=0, default=0)
     # relaciones
-    voz = db.relationship('Voz',backref=db.backref('archivoVoz', cascade="all, delete"), uselist=False, lazy=1)
-
+    voz = db.relationship('Voz', backref=db.backref(
+        'archivoVoz', cascade="all, delete"), uselist=False, lazy=1)
 
 
 # Schemas
@@ -103,26 +109,27 @@ schema_concursos = Concurso_Schema(many=True)
 
 class ArchivoVozSchema(ma.Schema):
     class Meta:
-        fields = ("id", "convertido","archivoOriginal", "archivoConvertido")
+        fields = ("id", "convertido", "archivoOriginal", "archivoConvertido")
 
 
 schema_archivoVoz = ArchivoVozSchema()
 schema_archivosVoz = ArchivoVozSchema(many=1)
 
+
 class Voz_Schema(ma.Schema):
     class Meta:
         fields = ("id", "fechaCreacion", "email", "nombres", "apellidos",
-         "convertida", "observaciones", "concursoId", "archivoId")
+                  "convertida", "observaciones", "concursoId", "archivoId")
+
 
 class Voz_SchemaSeguro(ma.Schema):
     class Meta:
         fields = ("fechaCreacion", "archivoId")
 
+
 schema_voz = Voz_Schema()
 schema_voces = Voz_Schema(many=1)
 schemaSeguro_voz = Voz_SchemaSeguro(many=1)
-
-
 
 
 # --------------------------- Routes ---------------------------
@@ -199,16 +206,44 @@ def concurso(idAdmin, idConcurso):
         db.session.commit()
         return '', 204
 
+
 @app.route('/api/concurso/<string:url_c>', methods=['GET'])
 def concursoConUrl(url_c):
     now = datetime.now()
     print(url_c)
-    concurso = Concurso.query.filter_by(url=url_c).filter(Concurso.fechaFin > now).first()
+    concurso = Concurso.query.filter_by(
+        url=url_c).filter(Concurso.fechaFin > now).first()
     if not concurso:
-        return jsonify({"msg":"No existe ningun concurso activo con la url especificada"}),404
-    return schema_concurso.dump(concurso),200
+        return jsonify({"msg": "No existe ningun concurso activo con la url especificada"}), 404
+    return schema_concurso.dump(concurso), 200
 
-   
+
+@app.route('/api/voces/<string:id_c>', methods=['GET'])
+def voces(id_c):
+    voces = Voz.query.filter_by(
+        concursoId=id_c).order_by(Voz.fechaCreacion.desc()).all()
+    
+    if not voces:
+        return jsonify({"msg": "Este concurso aún no tiene voces de partcipantes"}), 404
+    cantVoces = len(voces)
+    return jsonify({"voces":schema_voz.dump(voces),"pages":cantVoces/20}), 200
+
+@app.route('/api/audio/<string:id_v>', methods=['GET'])
+def vocesArch(id_v):
+    archivo = ArchivoVoz.query.get_or_404(id_v)
+    voz = archivo.voz
+
+    convertido = request.args.get('convertido') == '1'
+
+    if not voz or not archivo.voz:
+        return jsonify({"msg": "No se pudo encontrar el archivo solicitado"}), 404
+    if(convertido and not archivo.convertido):
+        return jsonify({"msg": "el archivo no se ha convertido"}), 404
+    elif (not convertido and not archivo.convertido):
+        return send_file(archivo.archivoOriginal),200
+    else:
+        return send_file(archivo.archivoConvertido),200
+    
 
 if __name__ == '__main__':
     app.run(debug=True)
