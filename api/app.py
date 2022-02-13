@@ -144,11 +144,8 @@ def register():
 @auth_required
 def concursos():
     user = current_user()
-    print(user.id)
-    if(user.id != user.id):
-        return {"msg":"Solo se pueden acceder a concursos propios"},403
     if request.method == 'GET':
-        return schema_concursos.dumps(Concurso.query.all())
+        return schema_concursos.dumps(user.concursos)
     elif request.method == 'POST':
         req = json.loads(request.data)
         nombre = req.get('nombre', None)

@@ -66,7 +66,7 @@ export default function Login(props){
                 >
                 <Form.Label>Contraseña</Form.Label>
                 <Form.Control
-                    type="text"
+                    type="password"
                     placeholder="Ingresa tu contraseña"
                 />
                 </Form.Group>
