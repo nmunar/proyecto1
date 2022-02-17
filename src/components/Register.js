@@ -43,6 +43,7 @@ export default function Register(props){
         }).then(json => {
             if(json === undefined)
                 return
+            alert("¡Registro exitoso! Bienvenido a SuperVoices, inicia sesión para usar nuestro servicio")
         }).catch(err => {
             alert('Fallo en el registro: '+err)
         })
