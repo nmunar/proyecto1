@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Navbar, Container, Button } from "react-bootstrap";
 import Login from "./Login";
 import Register from "./Register";
+import "./Descripcion.css";
 
 function Options(logged, setLogged){
 
@@ -32,7 +33,7 @@ const NavbarComp = (props) => {
     <Navbar variant="dark" bg="dark" expand="lg">
       <Container>
         <Navbar.Brand>SuperVoices</Navbar.Brand>
-        {Options(props.logged, props.setLogged, props.funcAuth)}
+        {Options(props.logged, props.setLogged)}
       </Container>
     </Navbar>
   );

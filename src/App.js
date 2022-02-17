@@ -5,11 +5,25 @@ import Profile from "./components/Profile";
 import TableComp from "./components/TableComp";
 import axios from "axios";
 import { useState, useEffect } from "react";
+import Descripcion from "./components/Descripcion";
+import ReactPaginate from "react-paginate";
+
 
 function App() {
   const [concursosList, setConcursosList] = useState([{}]);
   const [entra, setEntra] = useState(false);
   const [logged, setLogged] = useState(false);
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [postsPerPage, setPostsPerPage] = useState(2);
+
+  const indexOfLastPost = currentPage*postsPerPage;
+  const indexOfFirstPost = indexOfLastPost-postsPerPage;
+  const currentPosts = concursosList.slice(indexOfFirstPost,indexOfLastPost);
+
+  const paginate = (number) => {
+    setCurrentPage(number+1)
+  }
 
   useEffect(() => {
     const access_token = localStorage.getItem("access_token")
@@ -17,6 +31,7 @@ function App() {
       setLogged(true)
   },[])
 
+  
 
   //Cambiar id del usuario
   const createConcurso = (
@@ -144,6 +159,11 @@ function App() {
     }
   }
 
+  const handlePageClick = (event) => {
+    paginate(event.selected);
+    
+  };
+
   return (
     <div className="App">
       <NavbarComp  logged = {logged} setLogged = {setLogged} />
@@ -151,14 +171,33 @@ function App() {
         <>
           <Profile />
           <TableComp
-            list={concursosList}
+            list={currentPosts}
             funcCreate={createConcurso}
             funcUpdate={updateConcurso}
             funcDelete={deleteConcurso}
           />
+          <ReactPaginate
+            previousLabel={"<"}
+            nextLabel={">"}
+            breakLabel={"..."}
+            pageCount={Math.ceil(concursosList.length/postsPerPage)}
+            onPageChange={handlePageClick}
+            containerClassName={"pagination justify-content-center"}
+            pageClassName={"page-item"}
+            pageLinkClassName={"page-link"}
+            previousClassName={"page-item"}
+            previousLinkClassName={"page-link"}
+            nextClassName={"page-item"}
+            nextLinkClassName={"page-link"}
+            breakClassName={"page-item"}
+            breakLinkClassName={"page-link"}
+            activeClassName={"active"}
+          />
         </>
       ) : (
-        <></>
+        <div style={{backgroundColor: "rgb(236, 226, 198)"}}>
+         <Descripcion />
+        </div>
       )}
     </div>
   );
