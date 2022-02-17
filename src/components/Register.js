@@ -76,7 +76,7 @@ export default function Register(props) {
         <Button variant="outline-success" onClick={handleShow} id="registerButton">Registrase </Button>
         <Modal show={show}>
             <Modal.Header>
-            <Modal.Title>Registrarse</Modal.Title>
+                <Modal.Title>Registrarse</Modal.Title>
             </Modal.Header>
             <Modal.Body>
             <Form>
@@ -155,12 +155,6 @@ export default function Register(props) {
                 Registrarse
                 </Button>
             </Form>
-            </Modal.Body>
-            <Modal.Footer>
-            <Button onClick={handleClose} varian="secondary">
-                Cerrar
-            </Button>
-          </Form>
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={handleClose} varian="secondary">
