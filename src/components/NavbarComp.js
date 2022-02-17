@@ -34,7 +34,7 @@ const NavbarComp = (props) => {
   return (
     <Navbar variant="dark" bg="dark" expand="lg">
       <Container>
-        <Navbar.Brand>SuperVoices</Navbar.Brand>
+        <Navbar.Brand className="navbar-bran.home">SuperVoices</Navbar.Brand>
         {Options(props.logged, props.setLogged)}
       </Container>
     </Navbar>

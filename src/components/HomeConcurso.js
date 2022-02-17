@@ -15,6 +15,7 @@ import {
 } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.css";
 import ReactAudioPlayer from "react-audio-player";
+import ReactPaginate from "react-paginate";
 
 export default function HomeConcurso() {
   const [concurso, setConcurso] = useState({});
@@ -28,8 +29,20 @@ export default function HomeConcurso() {
   const [validated, setValidated] = useState(false);
   const [archVoz, setArchVoz] = useState({});
   const [postulacion, setPostularme] = useState(false);
-  const [pagination, setPagination] = useState();
-  const [audios, setAudios] = useState([]);
+  
+  const [audios, setAudios] = useState([]);//--------
+  const [currentPage, setCurrentPage] = useState(1);
+  const [postsPerPage, setPostsPerPage] = useState(20);
+
+  const indexOfLastPost = currentPage*postsPerPage;
+  const indexOfFirstPost = indexOfLastPost-postsPerPage;
+  const currentPosts = audios.slice(indexOfFirstPost,indexOfLastPost);
+
+  const paginate = (number) => {
+    setCurrentPage(number+1)
+  }
+
+  
   const [hizoFecth, setFecth] = useState(false);
 
   let { url } = useParams();
@@ -37,7 +50,7 @@ export default function HomeConcurso() {
   useEffect(() => {
     async function getCData() {
       //get concurso
-      let res = await fetch(`/api/concurso/${url}`);
+      let res = await fetch(`http://127.0.0.1:5000/api/concurso/${url}`);
       let data = await res.json();
 
       if (res["status"] !== 200) {
@@ -50,7 +63,7 @@ export default function HomeConcurso() {
       setImg(data.imagen);
 
       //get voces
-      let resp = await fetch(`/api/voces/${data.id}`);
+      let resp = await fetch(`http://127.0.0.1:5000/api/voces/${data.id}`);
       let json = await resp.json();
 
       if (resp["status"] !== 200) {
@@ -64,7 +77,7 @@ export default function HomeConcurso() {
       let audios = [];
       for (let voz of vocesF) {
         console.log(voz);
-        let respon = await fetch(`/api/audio/${voz.id}?convertido=1`);
+        let respon = await fetch(`http://127.0.0.1:5000/api/audio/${voz.id}?convertido=1`);
         let respblob = await respon.blob();
         let fechC = voz.fechaCreacion.split("T");
         audios.push({
@@ -81,7 +94,6 @@ export default function HomeConcurso() {
       console.log(audios);
       setAudios(audios);
       setFecth(true);
-      setPagination(Math.ceil(audios.length / 20));
     }
     getCData();
   }, []);
@@ -96,7 +108,7 @@ export default function HomeConcurso() {
         <>
           <Container>
             <ListGroup>
-              {audios.map((obj, index) => {
+              {currentPosts.map((obj, index) => {
                 return (
                   <>
                     <ListGroup.Item key={obj.id}>
@@ -126,6 +138,23 @@ export default function HomeConcurso() {
                 );
               })}
             </ListGroup>
+            <ReactPaginate
+            previousLabel={"<"}
+            nextLabel={">"}
+            breakLabel={"..."}
+            pageCount={Math.ceil(audios.length/postsPerPage)}
+            onPageChange={handlePageClick}
+            containerClassName={"pagination justify-content-center"}
+            pageClassName={"page-item"}
+            pageLinkClassName={"page-link"}
+            previousClassName={"page-item"}
+            previousLinkClassName={"page-link"}
+            nextClassName={"page-item"}
+            nextLinkClassName={"page-link"}
+            breakClassName={"page-item"}
+            breakLinkClassName={"page-link"}
+            activeClassName={"active"}
+          />
           </Container>
         </>
       );
@@ -144,13 +173,18 @@ export default function HomeConcurso() {
     }
   }
 
+  const handlePageClick = (event) => {
+    paginate(event.selected);
+    
+  };
+
   async function subirPostulacion() {
     // fetch envio audio
     var data = new FormData();
     data.append("file", archVoz);
     console.log(data);
     console.log(archVoz);
-    const response = await fetch("/api/audio", {
+    const response = await fetch("http://127.0.0.1:5000/api/audio", {
       method: "POST",
       body: data,
     });
@@ -168,7 +202,7 @@ export default function HomeConcurso() {
       archivoId: json.id,
     };
 
-    const res = await fetch("/api/voz", {
+    const res = await fetch("http://127.0.0.1:5000/api/voz", {
       method: "POST",
       body: JSON.stringify(data2),
     });

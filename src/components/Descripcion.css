@@ -10,7 +10,7 @@ figcaption{
     font-family: 'Festive', cursive;
     font-size: 3em;
 }
-.navbar-brand{
+.navbar-brand-home{
     font-family: 'Festive', cursive;
     font-size: 2em;
     color: rgb(236, 226, 198);
@@ -22,10 +22,10 @@ figcaption{
     font-size: 4em;
     color: rgb(236, 226, 198);
 }
-container{
+.container-home{
     background-color: rgb(236, 226, 198);
 }
-.row{    
+.row-home{    
     background-color: rgb(33, 37, 41);
 }
 .informacion{

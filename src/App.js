@@ -19,7 +19,7 @@ function App() {
 
   
   const [currentPage, setCurrentPage] = useState(1);
-  const [postsPerPage, setPostsPerPage] = useState(2);
+  const [postsPerPage, setPostsPerPage] = useState(20);
 
   const indexOfLastPost = currentPage*postsPerPage;
   const indexOfFirstPost = indexOfLastPost-postsPerPage;
@@ -54,7 +54,7 @@ function App() {
     let url = nombre.replace(/\s/g, "") + parseInt(seconds).toString();
     axios
       .post(
-        "/api/concursos",
+        "http://127.0.0.1:5000/api/concursos",
         {
           nombre: nombre,
           imagen: imagen,
@@ -106,7 +106,7 @@ function App() {
   ) => {
     axios
       .put(
-        "/api/concursos/" + idC,
+        "http://127.0.0.1:5000/api/concursos/" + idC,
         {
           nombre: nombre,
           imagen: imagen,
@@ -145,7 +145,7 @@ function App() {
   //Cambiar el id del usuario
   const deleteConcurso = (idC) => {
     axios
-      .delete("/api/concursos/" + idC, {
+      .delete("http://127.0.0.1:5000/api/concursos/" + idC, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
@@ -166,7 +166,7 @@ function App() {
       setEntra(true);
       //Cambiar el id del usuario
       axios
-        .get("/api/concursos", {
+        .get("http://127.0.0.1:5000/api/concursos", {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("access_token")}`,
           },
@@ -186,14 +186,17 @@ function App() {
     <div className="App">
       {!urlPath.includes("home") ? (
         <>
-          <Profile />
-          <TableComp
-            list={currentPosts}
-            funcCreate={createConcurso}
-            funcUpdate={updateConcurso}
-            funcDelete={deleteConcurso}
-          />
-          <ReactPaginate
+        <NavbarComp logged={logged} setLogged={setLogged} />
+        {logged ? (
+          <>
+            <Profile />
+            <TableComp
+              list={currentPosts}
+              funcCreate={createConcurso}
+              funcUpdate={updateConcurso}
+              funcDelete={deleteConcurso}
+            />
+             <ReactPaginate
             previousLabel={"<"}
             nextLabel={">"}
             breakLabel={"..."}
@@ -210,21 +213,27 @@ function App() {
             breakLinkClassName={"page-link"}
             activeClassName={"active"}
           />
-        </>
-      ) : (
-        <>
-          <Router>
-            <Routes>
-              {/*Home Concursos*/}
-              <Route
-                path="/home/concurso/:url"
-                element={<HomeConcurso />}
-              ></Route>
-            </Routes>
-          </Router>
+          </>
+        ) : (
+          <>
           <div style={{backgroundColor: "rgb(236, 226, 198)"}}>
           <Descripcion />
           </div>
+          </>
+        )}
+      </>
+    ) : (
+      <>
+        <Router>
+          <Routes>
+            {/*Home Concursos*/}
+            <Route
+              path="/home/concurso/:url"
+              element={<HomeConcurso />}
+            ></Route>
+          </Routes>
+        </Router>
+          
         </>
       )}
     </div>

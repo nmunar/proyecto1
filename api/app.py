@@ -32,7 +32,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'a random string'
 app.config['JWT_ACCESS_LIFESPAN'] = {'hours': 24}
 app.config['JWT_REFRESH_LIFESPAN'] = {'days': 30}
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:bd123@localhost/concursos'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:admin@localhost/concursos'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['CONVERT_FOLDER'] = './audiosConvertidos/'
 
