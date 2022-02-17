@@ -3,16 +3,20 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import NavbarComp from "./components/NavbarComp";
 import Profile from "./components/Profile";
 import TableComp from "./components/TableComp";
+import HomeConcurso from "./components/HomeConcurso";
+
 import axios from "axios";
 import { useState, useEffect } from "react";
 import Descripcion from "./components/Descripcion";
 import ReactPaginate from "react-paginate";
 
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 function App() {
   const [concursosList, setConcursosList] = useState([{}]);
   const [entra, setEntra] = useState(false);
   const [logged, setLogged] = useState(false);
+
   
   const [currentPage, setCurrentPage] = useState(1);
   const [postsPerPage, setPostsPerPage] = useState(2);
@@ -24,14 +28,17 @@ function App() {
   const paginate = (number) => {
     setCurrentPage(number+1)
   }
+  
+  const [urlPath, setUrl] = useState(window.location.pathname);
 
   useEffect(() => {
-    const access_token = localStorage.getItem("access_token")
-    if(access_token)
-      setLogged(true)
-  },[])
+    const access_token = localStorage.getItem("access_token");
+    if (access_token) setLogged(true);
+    setUrl(window.location.pathname);
+  }, []);
 
-  
+
+  console.log(urlPath);
 
   //Cambiar id del usuario
   const createConcurso = (
@@ -47,7 +54,7 @@ function App() {
     let url = nombre.replace(/\s/g, "") + parseInt(seconds).toString();
     axios
       .post(
-        "http://127.0.0.1:5000/api/concursos",
+        "/api/concursos",
         {
           nombre: nombre,
           imagen: imagen,
@@ -99,7 +106,7 @@ function App() {
   ) => {
     axios
       .put(
-        "http://127.0.0.1:5000/api/concursos/" + idC,
+        "/api/concursos/" + idC,
         {
           nombre: nombre,
           imagen: imagen,
@@ -138,7 +145,7 @@ function App() {
   //Cambiar el id del usuario
   const deleteConcurso = (idC) => {
     axios
-      .delete("http://127.0.0.1:5000/api/concursos/" + idC, {
+      .delete("/api/concursos/" + idC, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
@@ -159,7 +166,7 @@ function App() {
       setEntra(true);
       //Cambiar el id del usuario
       axios
-        .get("http://127.0.0.1:5000/api/concursos", {
+        .get("/api/concursos", {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("access_token")}`,
           },
@@ -177,8 +184,7 @@ function App() {
 
   return (
     <div className="App">
-      <NavbarComp logged={logged} setLogged={setLogged} />
-      {logged ? (
+      {!urlPath.includes("home") ? (
         <>
           <Profile />
           <TableComp
@@ -206,9 +212,20 @@ function App() {
           />
         </>
       ) : (
-        <div style={{backgroundColor: "rgb(236, 226, 198)"}}>
-         <Descripcion />
-        </div>
+        <>
+          <Router>
+            <Routes>
+              {/*Home Concursos*/}
+              <Route
+                path="/home/concurso/:url"
+                element={<HomeConcurso />}
+              ></Route>
+            </Routes>
+          </Router>
+          <div style={{backgroundColor: "rgb(236, 226, 198)"}}>
+          <Descripcion />
+          </div>
+        </>
       )}
     </div>
   );

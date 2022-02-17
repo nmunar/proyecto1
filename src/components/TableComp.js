@@ -75,7 +75,7 @@ const TableComp = (props) => {
                 <Button
                   variant="primary"
                   onClick={() => {
-                    window.open(obj.url, "_blank").focus();
+                    window.open("/home/concurso/" + obj.url, "_blank").focus();
                   }}
                 >
                   Ir a detalle
