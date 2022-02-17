@@ -24,7 +24,7 @@ export default function Register(props) {
       return;
     }
 
-    fetch("http://127.0.0.1:5000/api/register",{
+    fetch("/api/register",{
             method:"POST",
             body: JSON.stringify({
                 nombres: nombre,

@@ -17,7 +17,7 @@ export default function Login(props) {
       return;
     }
 
-    fetch("http://127.0.0.1:5000/api/login", {
+    fetch("/api/login", {
       method: "POST",
       body: JSON.stringify({
         email: email,

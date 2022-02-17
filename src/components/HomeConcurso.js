@@ -57,7 +57,7 @@ export default function HomeConcurso() {
       if(access_token){
         //get concurso
         console.log("asa")
-        let res = await fetch(`http://127.0.0.1:5000/api/concurso/${url}/auth`,{headers: {
+        let res = await fetch(`/api/concurso/${url}/auth`,{headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         }});
         let data = await res.json();
@@ -72,7 +72,7 @@ export default function HomeConcurso() {
         setImg(data.imagen);
 
         //get voces
-        let resp = await fetch(`http://127.0.0.1:5000/api/voces/${data.id}/auth`,{headers: {
+        let resp = await fetch(`/api/voces/${data.id}/auth`,{headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         }});
         let json = await resp.json();
@@ -88,13 +88,13 @@ export default function HomeConcurso() {
         let audios = [];
         for (let voz of vocesF) {
           console.log(voz);
-          let respon = await fetch(`http://127.0.0.1:5000/api/audio/${voz.id}/auth`,{headers: {
+          let respon = await fetch(`/api/audio/${voz.id}/auth`,{headers: {
             Authorization: `Bearer ${localStorage.getItem("access_token")}`,
           }});
-          let responc = await fetch(`http://127.0.0.1:5000/api/audio/${voz.id}?convertido=1/authC`,{headers: {
+          let responc = await fetch(`/api/audio/${voz.id}?convertido=1/authC`,{headers: {
             Authorization: `Bearer ${localStorage.getItem("access_token")}`,
           }});
-          let responb = await fetch(`http://127.0.0.1:5000/api/audio/${voz.id}/authB`,{headers: {
+          let responb = await fetch(`/api/audio/${voz.id}/authB`,{headers: {
             Authorization: `Bearer ${localStorage.getItem("access_token")}`,
           }});
           let responjson = await responb.json();
@@ -121,7 +121,7 @@ export default function HomeConcurso() {
       else{
         //get concurso
         console.log("lll")
-        let res = await fetch(`http://127.0.0.1:5000/api/concurso/${url}`);
+        let res = await fetch(`/api/concurso/${url}`);
         let data = await res.json();
 
         if (res["status"] !== 200) {
@@ -134,7 +134,7 @@ export default function HomeConcurso() {
         setImg(data.imagen);
 
         //get voces
-        let resp = await fetch(`http://127.0.0.1:5000/api/voces/${data.id}`);
+        let resp = await fetch(`/api/voces/${data.id}`);
         let json = await resp.json();
 
         if (resp["status"] !== 200) {
@@ -148,7 +148,7 @@ export default function HomeConcurso() {
         let audios = [];
         for (let voz of vocesF) {
           console.log(voz);
-          let respon = await fetch(`http://127.0.0.1:5000/api/audio/${voz.id}?convertido=1`);
+          let respon = await fetch(`/api/audio/${voz.id}?convertido=1`);
           let respblob = await respon.blob();
           let fechC = voz.fechaCreacion.split("T");
           audios.push({
@@ -282,7 +282,7 @@ export default function HomeConcurso() {
     data.append("file", archVoz);
     console.log(data);
     console.log(archVoz);
-    const response = await fetch("http://127.0.0.1:5000/api/audio", {
+    const response = await fetch("/api/audio", {
       method: "POST",
       body: data,
     });
@@ -300,7 +300,7 @@ export default function HomeConcurso() {
       archivoId: json.id,
     };
 
-    const res = await fetch("http://127.0.0.1:5000/api/voz", {
+    const res = await fetch("/api/voz", {
       method: "POST",
       body: JSON.stringify(data2),
     });
