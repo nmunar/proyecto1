@@ -1,0 +1,7 @@
+#buttonContainer {
+  display: flex;
+}
+
+#loginButton {
+  margin-right: 2%;
+}

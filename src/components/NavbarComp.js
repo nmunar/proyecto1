@@ -2,29 +2,31 @@ import React, { useState } from "react";
 import { Navbar, Container, Button } from "react-bootstrap";
 import Login from "./Login";
 import Register from "./Register";
+import "./Navbar.css";
 
-function Options(logged, setLogged){
-
-  function logOut(){
-      setLogged(false)
-      localStorage.clear()
-      window.location.replace('/')
+function Options(logged, setLogged) {
+  function logOut() {
+    setLogged(false);
+    localStorage.clear();
+    window.location.replace("/");
   }
 
-  if(!logged){
-      return(
-        <>
-        <Login logged = {logged} setLogged = {setLogged} />
-        <Register />
-        </>
-      )
+  if (!logged) {
+    return (
+      <>
+        <div id="buttonContainer">
+          <Login logged={logged} setLogged={setLogged} id="loginButton" />
+          <Register />
+        </div>
+      </>
+    );
+  } else {
+    return (
+      <Button variant="outline-success" onClick={() => logOut()}>
+        Cerrar sesión
+      </Button>
+    );
   }
-  else{
-      return(
-          <Button onClick={() => logOut()}>Log Out</Button>
-      )
-  }
-
 }
 
 const NavbarComp = (props) => {

@@ -27,10 +27,7 @@ function App() {
     recomendaciones
   ) => {
     let seconds = new Date().getTime() / 1000;
-    let url =
-      "/home/concurso/" +
-      nombre.replace(/\s/g, "") +
-      parseInt(seconds).toString();
+    let url = nombre.replace(/\s/g, "") + parseInt(seconds).toString();
     axios
       .post(
         "http://127.0.0.1:5000/api/concursos",
@@ -64,7 +61,9 @@ function App() {
         });
         setConcursosList(newConcursos);
         alert(
-          "La URL pública de su concurso es: " + "http://127.0.0.1:5000" + url
+          "La URL pública de su concurso es: " +
+            "http://127.0.0.1:3000/home/concurso/" +
+            url
         );
       });
   };
