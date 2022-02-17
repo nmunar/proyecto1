@@ -31,6 +31,7 @@ const TableComp = (props) => {
             <th>VALOR A PAGAR</th>
             <th>EDITAR</th>
             <th>ELIMINAR</th>
+            <th>DETALLE</th>
           </tr>
         </thead>
         <tbody>
@@ -68,6 +69,16 @@ const TableComp = (props) => {
                   }}
                 >
                   Eliminar
+                </Button>
+              </td>
+              <td>
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    window.open(obj.url, "_blank").focus();
+                  }}
+                >
+                  Ir a detalle
                 </Button>
               </td>
             </tr>
@@ -186,7 +197,7 @@ const TableComp = (props) => {
                     recomendaciones
                   );
                   handleClose();
-                  window.location.reload()
+                  window.location.reload();
                 }
               }}
             >
