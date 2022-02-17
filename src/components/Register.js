@@ -1,32 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Modal, Button, Form } from "react-bootstrap";
 
-export default function Register(props){
-    const [show, setShow] = useState(false);
-  
-    const handleShow = () => setShow(true);
-    const handleClose = () => setShow(false);
+export default function Register(props) {
+  const [show, setShow] = useState(false);
 
+  const handleShow = () => setShow(true);
+  const handleClose = () => setShow(false);
 
-    const [nombre, setNombre] = useState("")    
-    const [apellido, setApellido] = useState("")
-    const [email, setEmail] = useState("")
-    const [password, setPassword] = useState("")
-    const [confirmPassword, setConfirmPassword] = useState("")
+  const [nombre, setNombre] = useState("");
+  const [apellido, setApellido] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
-    function register(evt){
+  function register(evt) {
+    if (!email.includes("@")) {
+      alert("Introduzca un correo válido");
+      return;
+    }
+    if (password != confirmPassword) {
+      alert("Las contraseñas no coinciden");
+      return;
+    }
 
-        if(!email.includes('@')){
-            alert("Introduzca un correo válido")
-            return
-        }
-        if(password != confirmPassword){
-            alert("Las contraseñas no coinciden")
-            return
-        }
-
-        fetch("http://127.0.0.1:5000/api/register",{
+    fetch("http://127.0.0.1:5000/api/register",{
             method:"POST",
             body: JSON.stringify({
                 nombres: nombre,
@@ -43,6 +41,7 @@ export default function Register(props){
         }).then(json => {
             if(json === undefined)
                 return
+            alert("¡Registro exitoso! Bienvenido a SuperVoices, inicia sesión para usar nuestro servicio")
         }).catch(err => {
             alert('Fallo en el registro: '+err)
         })
@@ -50,10 +49,10 @@ export default function Register(props){
 
     return(
         <>
-        <Button variant="outline-success" onClick={handleShow}>Registrase</Button>
+        <Button variant="outline-success" onClick={handleShow} id="registerButton">Registrase </Button>
         <Modal show={show}>
             <Modal.Header>
-            <Modal.Title>Registrarse</Modal.Title>
+                <Modal.Title>Registrarse</Modal.Title>
             </Modal.Header>
             <Modal.Body>
             <Form>
@@ -132,14 +131,13 @@ export default function Register(props){
                 Registrarse
                 </Button>
             </Form>
-            </Modal.Body>
-            <Modal.Footer>
-            <Button onClick={handleClose} varian="secondary">
-                Cerrar
-            </Button>
-            </Modal.Footer>
-        </Modal>
-        </>
-    )
-        
+        </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={handleClose} varian="secondary">
+            Cerrar
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </>
+  );
 }

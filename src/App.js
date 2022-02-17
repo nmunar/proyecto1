@@ -3,29 +3,42 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import NavbarComp from "./components/NavbarComp";
 import Profile from "./components/Profile";
 import TableComp from "./components/TableComp";
-import HomeConcurso from './components/HomeConcurso';
+import HomeConcurso from "./components/HomeConcurso";
 
 import axios from "axios";
 import { useState, useEffect } from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route
-} from "react-router-dom";
+import Descripcion from "./components/Descripcion";
+import ReactPaginate from "react-paginate";
+
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 function App() {
   const [concursosList, setConcursosList] = useState([{}]);
   const [entra, setEntra] = useState(false);
   const [logged, setLogged] = useState(false);
-  const [urlPath, setUrl] = useState(window.location.pathname)
+
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [postsPerPage, setPostsPerPage] = useState(20);
+
+  const indexOfLastPost = currentPage*postsPerPage;
+  const indexOfFirstPost = indexOfLastPost-postsPerPage;
+  const currentPosts = concursosList.slice(indexOfFirstPost,indexOfLastPost);
+
+  const paginate = (number) => {
+    setCurrentPage(number+1)
+  }
+  
+  const [urlPath, setUrl] = useState(window.location.pathname);
 
   useEffect(() => {
     const access_token = localStorage.getItem("access_token");
     if (access_token) setLogged(true);
-    setUrl(window.location.pathname)
+    setUrl(window.location.pathname);
   }, []);
 
-  console.log(urlPath)
+
+  console.log(urlPath);
 
   //Cambiar id del usuario
   const createConcurso = (
@@ -38,11 +51,10 @@ function App() {
     recomendaciones
   ) => {
     let seconds = new Date().getTime() / 1000;
-    let url = nombre.replace(/\s/g, "") +
-      parseInt(seconds).toString();
+    let url = nombre.replace(/\s/g, "") + parseInt(seconds).toString();
     axios
       .post(
-        "/api/concursos",
+        "http://127.0.0.1:5000/api/concursos",
         {
           nombre: nombre,
           imagen: imagen,
@@ -73,7 +85,9 @@ function App() {
         });
         setConcursosList(newConcursos);
         alert(
-          "La URL pública de su concurso es: " + "http://127.0.0.1:3000/home/concurso/" + url
+          "La URL pública de su concurso es: " +
+            "http://127.0.0.1:3000/home/concurso/" +
+            url
         );
       });
   };
@@ -92,7 +106,7 @@ function App() {
   ) => {
     axios
       .put(
-        "/api/concursos/" + idC,
+        "http://127.0.0.1:5000/api/concursos/" + idC,
         {
           nombre: nombre,
           imagen: imagen,
@@ -131,7 +145,7 @@ function App() {
   //Cambiar el id del usuario
   const deleteConcurso = (idC) => {
     axios
-      .delete("/api/concursos/" + idC, {
+      .delete("http://127.0.0.1:5000/api/concursos/" + idC, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
@@ -152,7 +166,7 @@ function App() {
       setEntra(true);
       //Cambiar el id del usuario
       axios
-        .get("/api/concursos", {
+        .get("http://127.0.0.1:5000/api/concursos", {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("access_token")}`,
           },
@@ -163,31 +177,65 @@ function App() {
     }
   }
 
+  const handlePageClick = (event) => {
+    paginate(event.selected);
+    
+  };
+
   return (
-
     <div className="App">
-
-      {!urlPath.includes('home')? (<><NavbarComp logged={logged} setLogged={setLogged} />
+      {!urlPath.includes("home") ? (
+        <>
+        <NavbarComp logged={logged} setLogged={setLogged} />
         {logged ? (
           <>
             <Profile />
             <TableComp
-              list={concursosList}
+              list={currentPosts}
               funcCreate={createConcurso}
               funcUpdate={updateConcurso}
               funcDelete={deleteConcurso}
             />
+             <ReactPaginate
+            previousLabel={"<"}
+            nextLabel={">"}
+            breakLabel={"..."}
+            pageCount={Math.ceil(concursosList.length/postsPerPage)}
+            onPageChange={handlePageClick}
+            containerClassName={"pagination justify-content-center"}
+            pageClassName={"page-item"}
+            pageLinkClassName={"page-link"}
+            previousClassName={"page-item"}
+            previousLinkClassName={"page-link"}
+            nextClassName={"page-item"}
+            nextLinkClassName={"page-link"}
+            breakClassName={"page-item"}
+            breakLinkClassName={"page-link"}
+            activeClassName={"active"}
+          />
           </>
         ) : (
-          <></>
-        )}</>) : (<><Router>
+          <>
+          <div style={{backgroundColor: "rgb(236, 226, 198)"}}>
+          <Descripcion />
+          </div>
+          </>
+        )}
+      </>
+    ) : (
+      <>
+        <Router>
           <Routes>
             {/*Home Concursos*/}
-            <Route path="/home/concurso/:url" element={<HomeConcurso />}></Route>
+            <Route
+              path="/home/concurso/:url"
+              element={<HomeConcurso />}
+            ></Route>
           </Routes>
-        </Router></>)}
-
-
+        </Router>
+          
+        </>
+      )}
     </div>
   );
 }

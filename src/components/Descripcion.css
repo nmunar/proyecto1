@@ -1,0 +1,35 @@
+figcaption{
+    position: absolute;
+    color: white;
+    -webkit-text-stroke: 1px black;
+    bottom: 2rem;
+    margin: 0 5rem;
+    font-size: 1.5em;
+}
+.titulo{
+    font-family: 'Festive', cursive;
+    font-size: 3em;
+}
+.navbar-brand-home{
+    font-family: 'Festive', cursive;
+    font-size: 2em;
+    color: rgb(236, 226, 198);
+}
+.super{
+    margin-top: 2cm;
+    text-align: center;
+    font-family: 'Festive', cursive;
+    font-size: 4em;
+    color: rgb(236, 226, 198);
+}
+.container-home{
+    background-color: rgb(236, 226, 198);
+}
+.row-home{    
+    background-color: rgb(33, 37, 41);
+}
+.informacion{
+    margin-top: 1cm;
+    text-align: justify;
+    color: rgb(236, 226, 198);
+}
