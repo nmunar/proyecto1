@@ -1,4 +1,3 @@
-# import enum
 from enum import unique
 import os
 from xmlrpc.client import DateTime
@@ -15,7 +14,6 @@ from flask_cors.extension import CORS
 import json
 import traceback
 from flask_praetorian import auth_required, current_user
-from tasks import *
 
 POSTGRES = {
     'user': 'postgres',
@@ -35,12 +33,19 @@ app.config['JWT_REFRESH_LIFESPAN'] = {'days': 30}
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Nikitos99@localhost/concursos'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['CONVERT_FOLDER'] = './audiosConvertidos/'
+app.config['BROKER_URL'] = 'redis://localhost:6379/0'
+
+CORS(app)
+guard = flask_praetorian.Praetorian()
+
+
 
 db = SQLAlchemy(app)
+
 ma = Marshmallow(app)
-guard = flask_praetorian.Praetorian()
-api = Api(app)
-CORS(app)
+    #api = Api(app)
+
+app.app_context().push()
 
 extensions = ['wav', 'mp3', 'aac', 'ogg']
 
@@ -98,6 +103,9 @@ class Concurso(db.Model):
                             cascade="all, delete", lazy=1)
 
 # Voz
+
+
+
 class Voz(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     fechaCreacion = db.Column(db.DateTime, nullable=0)
@@ -296,11 +304,12 @@ def concursoConUrl(url_c):
 def voces(id_c):
     voces = Voz.query.filter_by(
         concursoId=id_c).order_by(Voz.fechaCreacion.desc()).all()
-    
+
     if not voces:
         return jsonify({"msg": "Este concurso aún no tiene voces de partcipantes"}), 404
     cantVoces = len(voces)
-    return jsonify({"voces":schema_voces.dump(voces),"pages":cantVoces/20}), 200
+    return jsonify({"voces": schema_voces.dump(voces), "pages": cantVoces/20}), 200
+
 
 @app.route('/api/audio/<string:id_v>', methods=['GET'])
 def vocesArch(id_v):
@@ -314,10 +323,11 @@ def vocesArch(id_v):
     if(convertido and not archivo.convertido):
         return jsonify({"msg": "el archivo no se ha convertido"}), 404
     elif (not convertido and not archivo.convertido):
-        return send_file(archivo.archivoOriginal),200
+        return send_file(archivo.archivoOriginal), 200
     else:
-        return send_file(archivo.archivoConvertido),200
-    
+        return send_file(archivo.archivoConvertido), 200
+
+
 @app.route('/api/audio', methods=['POST'])
 def audio():
     print(request.files)
@@ -334,38 +344,42 @@ def audio():
         db.session.add(archivo_voz)
         db.session.commit()
     try:
-        upload_directory = os.path.join(app.config['UPLOAD_FOLDER'],'{}/'.format(archivo_voz.id))
-        convert_directory = os.path.join(app.config['CONVERT_FOLDER'],'{}/'.format(archivo_voz.id))
+        upload_directory = os.path.join(
+            app.config['UPLOAD_FOLDER'], '{}/'.format(archivo_voz.id))
+        convert_directory = os.path.join(
+            app.config['CONVERT_FOLDER'], '{}/'.format(archivo_voz.id))
         os.makedirs(upload_directory, exist_ok=True)
         os.makedirs(convert_directory, exist_ok=True)
-        path = os.path.join(upload_directory,filename)
-        convert_path = os.path.join(convert_directory,'{}.mp3'.format(os.path.splitext(filename)[0]))
+        path = os.path.join(upload_directory, filename)
+        convert_path = os.path.join(
+            convert_directory, '{}.mp3'.format(os.path.splitext(filename)[0]))
         archivo_voz.archivoOriginal = path
         archivo_voz.archivoConvertido = convert_path
         file.save(path)
         db.session.commit()
-        return schema_archivoVoz.dump(archivo_voz),201
+        return schema_archivoVoz.dump(archivo_voz), 201
     except:
         traceback.print_exc()
         db.session.delete(archivo_voz)
         db.session.commit()
-        return jsonify({"msg":"Error guardando el archivo"}),500
+        return jsonify({"msg": "Error guardando el archivo"}), 500
+
 
 @app.route('/api/voz', methods=['POST'])
 def subir_voz():
     fechaCreacion = datetime.now()
     req = json.loads(request.data)
     email = req.get('email', None)
-    nombres = req.get('nombres',None)
-    apellidos = req.get('apellidos',None)
-    observaciones = req.get('observaciones',None)
-    archivoId = req.get('archivoId',None)
-    concursoId = req.get('concursoId',None)
-    
+    nombres = req.get('nombres', None)
+    apellidos = req.get('apellidos', None)
+    observaciones = req.get('observaciones', None)
+    archivoId = req.get('archivoId', None)
+    concursoId = req.get('concursoId', None)
+
     Concurso.query.get_or_404(concursoId)
     archivo = ArchivoVoz.query.get_or_404(archivoId)
     if not archivo.archivoOriginal:
-        return jsonify({"msg":"Archivo de audio no existente"}),404
+        return jsonify({"msg": "Archivo de audio no existente"}), 404
 
     voz = Voz(
         fechaCreacion=fechaCreacion,
@@ -378,8 +392,9 @@ def subir_voz():
     )
     db.session.add(voz)
     db.session.commit()
-    convertir_a_mp3.delay(str(archivo.id), archivo.archivoOriginal, archivo.archivoConvertido)
     return schema_voz.dump(voz),201
+
+
 
 @app.route('/api/concurso/<string:url_c>/auth', methods=['GET'])
 @auth_required
@@ -399,11 +414,12 @@ def vocesAuth(id_c):
     user = current_user()
     voces = Voz.query.filter_by(
         concursoId=id_c).order_by(Voz.fechaCreacion.desc()).all()
-    
+
     if not voces:
         return jsonify({"msg": "Este concurso aún no tiene voces de partcipantes"}), 404
     cantVoces = len(voces)
-    return jsonify({"voces":schema_voces.dump(voces),"pages":cantVoces/20}), 200
+    return jsonify({"voces": schema_voces.dump(voces), "pages": cantVoces/20}), 200
+
 
 @app.route('/api/audio/<string:id_v>/auth', methods=['GET'])
 @auth_required
@@ -417,8 +433,9 @@ def vocesArchAuth(id_v):
     if not voz or not archivo.voz:
         return jsonify({"msg": "No se pudo encontrar el archivo solicitado"}), 404
     else:
-        return send_file(archivo.archivoOriginal),200
-    
+        return send_file(archivo.archivoOriginal), 200
+
+
 @app.route('/api/audio/<string:id_v>/authC', methods=['GET'])
 @auth_required
 def vocesArchAuthC(id_v):
@@ -433,9 +450,10 @@ def vocesArchAuthC(id_v):
     if(convertido and not archivo.convertido):
         return jsonify({"msg": "el archivo no se ha convertido"}), 404
     elif (not convertido and not archivo.convertido):
-        return jsonify({"msg": "el archivo no se ha convertido aun"}),204
+        return jsonify({"msg": "el archivo no se ha convertido aun"}), 204
     else:
-        return send_file(archivo.archivoConvertido),200
+        return send_file(archivo.archivoConvertido), 200
+
 
 @app.route('/api/audio/<string:id_v>/authB', methods=['GET'])
 @auth_required
@@ -449,8 +467,8 @@ def vocesArchAuthB(id_v):
     if not voz or not archivo.voz:
         return jsonify({"msg": "No se pudo encontrar el archivo solicitado"}), 404
     else:
-        return jsonify({"convertido": convertido}),200
+        return jsonify({"convertido": convertido}), 200
 
 
-if __name__ == '__main__':
+if __name__ == '_main_':
     app.run(debug=True)
