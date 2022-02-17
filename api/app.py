@@ -381,6 +381,76 @@ def subir_voz():
     convertir_a_mp3.delay(str(archivo.id), archivo.archivoOriginal, archivo.archivoConvertido)
     return schema_voz.dump(voz),201
 
+@app.route('/api/concurso/<string:url_c>/auth', methods=['GET'])
+@auth_required
+def concursoConUrlAuth(url_c):
+    user = current_user()
+    now = datetime.now()
+    concurso = Concurso.query.filter_by(
+        url=url_c).filter(Concurso.fechaFin > now).first()
+    if not concurso:
+        return jsonify({"msg": "No existe ningun concurso activo con la url especificada"}), 404
+    return schema_concurso.dump(concurso), 200
+
+
+@app.route('/api/voces/<string:id_c>/auth', methods=['GET'])
+@auth_required
+def vocesAuth(id_c):
+    user = current_user()
+    voces = Voz.query.filter_by(
+        concursoId=id_c).order_by(Voz.fechaCreacion.desc()).all()
+    
+    if not voces:
+        return jsonify({"msg": "Este concurso aún no tiene voces de partcipantes"}), 404
+    cantVoces = len(voces)
+    return jsonify({"voces":schema_voces.dump(voces),"pages":cantVoces/20}), 200
+
+@app.route('/api/audio/<string:id_v>/auth', methods=['GET'])
+@auth_required
+def vocesArchAuth(id_v):
+    user = current_user()
+    archivo = ArchivoVoz.query.get_or_404(id_v)
+    voz = archivo.voz
+
+    convertido = archivo.convertido
+
+    if not voz or not archivo.voz:
+        return jsonify({"msg": "No se pudo encontrar el archivo solicitado"}), 404
+    else:
+        return send_file(archivo.archivoOriginal),200
+    
+@app.route('/api/audio/<string:id_v>/authC', methods=['GET'])
+@auth_required
+def vocesArchAuthC(id_v):
+    user = current_user()
+    archivo = ArchivoVoz.query.get_or_404(id_v)
+    voz = archivo.voz
+
+    convertido = archivo.convertido
+
+    if not voz or not archivo.voz:
+        return jsonify({"msg": "No se pudo encontrar el archivo solicitado"}), 404
+    if(convertido and not archivo.convertido):
+        return jsonify({"msg": "el archivo no se ha convertido"}), 404
+    elif (not convertido and not archivo.convertido):
+        return jsonify({"msg": "el archivo no se ha convertido aun"}),204
+    else:
+        return send_file(archivo.archivoConvertido),200
+
+@app.route('/api/audio/<string:id_v>/authB', methods=['GET'])
+@auth_required
+def vocesArchAuthB(id_v):
+    user = current_user()
+    archivo = ArchivoVoz.query.get_or_404(id_v)
+    voz = archivo.voz
+
+    convertido = archivo.convertido
+
+    if not voz or not archivo.voz:
+        return jsonify({"msg": "No se pudo encontrar el archivo solicitado"}), 404
+    else:
+        return jsonify({"convertido": convertido}),200
+
 
 if __name__ == '__main__':
     app.run(debug=True)

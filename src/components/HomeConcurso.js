@@ -42,58 +42,130 @@ export default function HomeConcurso() {
     setCurrentPage(number+1)
   }
 
+  const access_token = localStorage.getItem("access_token");
+
   
   const [hizoFecth, setFecth] = useState(false);
 
   let { url } = useParams();
 
   useEffect(() => {
+
+
     async function getCData() {
-      //get concurso
-      let res = await fetch(`http://127.0.0.1:5000/api/concurso/${url}`);
-      let data = await res.json();
 
-      if (res["status"] !== 200) {
-        alert(data["msg"]);
-        return;
+      if(access_token){
+        //get concurso
+        console.log("asa")
+        let res = await fetch(`http://127.0.0.1:5000/api/concurso/${url}/auth`,{headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        }});
+        let data = await res.json();
+
+        if (res["status"] !== 200) {
+          alert(data["msg"]);
+          return;
+        }
+
+        setConcurso(data);
+        setId(data.id);
+        setImg(data.imagen);
+
+        //get voces
+        let resp = await fetch(`http://127.0.0.1:5000/api/voces/${data.id}/auth`,{headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        }});
+        let json = await resp.json();
+
+        if (resp["status"] !== 200) {
+          alert(json["msg"]);
+          return;
+        }
+
+        console.log(json);
+        const vocesF = json["voces"];
+        //archvivos convertidos
+        let audios = [];
+        for (let voz of vocesF) {
+          console.log(voz);
+          let respon = await fetch(`http://127.0.0.1:5000/api/audio/${voz.id}/auth`,{headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          }});
+          let responc = await fetch(`http://127.0.0.1:5000/api/audio/${voz.id}?convertido=1/authC`,{headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          }});
+          let responb = await fetch(`http://127.0.0.1:5000/api/audio/${voz.id}/authB`,{headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          }});
+          let responjson = await responb.json();
+          let respblob = await respon.blob();
+          let respcblob = await responc.blob();
+          let fechC = voz.fechaCreacion.split("T");
+          audios.push({
+            id: voz.id,
+            nombres: voz.nombres,
+            apellidos: voz.apellidos,
+            email: voz.email,
+            obs: voz.observaciones,
+            fecha: fechC[0] + " Hora : " + fechC[1].split(".")[0],
+            url: respblob,
+            url2: respcblob,
+            convertido: responjson.convertido
+          });
+        }
+
+        console.log(audios);
+        setAudios(audios);
+        setFecth(true);
       }
+      else{
+        //get concurso
+        console.log("lll")
+        let res = await fetch(`http://127.0.0.1:5000/api/concurso/${url}`);
+        let data = await res.json();
 
-      setConcurso(data);
-      setId(data.id);
-      setImg(data.imagen);
+        if (res["status"] !== 200) {
+          alert(data["msg"]);
+          return;
+        }
 
-      //get voces
-      let resp = await fetch(`http://127.0.0.1:5000/api/voces/${data.id}`);
-      let json = await resp.json();
+        setConcurso(data);
+        setId(data.id);
+        setImg(data.imagen);
 
-      if (resp["status"] !== 200) {
-        alert(json["msg"]);
-        return;
+        //get voces
+        let resp = await fetch(`http://127.0.0.1:5000/api/voces/${data.id}`);
+        let json = await resp.json();
+
+        if (resp["status"] !== 200) {
+          alert(json["msg"]);
+          return;
+        }
+
+        console.log(json);
+        const vocesF = json["voces"];
+        //archvivos convertidos
+        let audios = [];
+        for (let voz of vocesF) {
+          console.log(voz);
+          let respon = await fetch(`http://127.0.0.1:5000/api/audio/${voz.id}?convertido=1`);
+          let respblob = await respon.blob();
+          let fechC = voz.fechaCreacion.split("T");
+          audios.push({
+            id: voz.id,
+            nombres: voz.nombres,
+            apellidos: voz.apellidos,
+            email: voz.email,
+            obs: voz.observaciones,
+            fecha: fechC[0] + " Hora : " + fechC[1].split(".")[0],
+            url: respblob,
+          });
+        }
+
+        console.log(audios);
+        setAudios(audios);
+        setFecth(true);
       }
-
-      console.log(json);
-      const vocesF = json["voces"];
-      //archvivos convertidos
-      let audios = [];
-      for (let voz of vocesF) {
-        console.log(voz);
-        let respon = await fetch(`http://127.0.0.1:5000/api/audio/${voz.id}?convertido=1`);
-        let respblob = await respon.blob();
-        let fechC = voz.fechaCreacion.split("T");
-        audios.push({
-          id: voz.id,
-          nombres: voz.nombres,
-          apellidos: voz.apellidos,
-          email: voz.email,
-          obs: voz.observaciones,
-          fecha: fechC[0] + " Hora : " + fechC[1].split(".")[0],
-          url: respblob,
-        });
-      }
-
-      console.log(audios);
-      setAudios(audios);
-      setFecth(true);
     }
     getCData();
   }, []);
@@ -116,7 +188,9 @@ export default function HomeConcurso() {
                         <p>
                           <b>Subido:</b> {obj.fecha} - <b>Nombre:</b>{" "}
                           {obj.nombres + " " + obj.apellidos} -- <b>Email: </b>
-                          {obj.email}
+                          {obj.email}--{access_token ? (<><b>Estado: </b> {obj.convertido?"Convertida":"En proceso"}</>):(
+                        <></>
+                      )}
                         </p>
                         {obj.obs !== "" ? (
                           <p>
@@ -126,13 +200,37 @@ export default function HomeConcurso() {
                           <></>
                         )}
                       </Row>
-                      <Row key={obj.id + "b"}>
-                        <ReactAudioPlayer
-                          src={URL.createObjectURL(obj.url)}
-                          controls
-                          key={obj.id + "c"}
-                        />
-                      </Row>
+                      {access_token ? (<>
+                        {obj.convertido ? (<>
+                        <Row key={obj.id + "b"}>
+                          <ReactAudioPlayer
+                            src={URL.createObjectURL(obj.url2)}
+                            controls
+                            key={obj.id + "c"}
+                          />
+                        </Row>
+                        </>):(
+                        <></>
+                      )}
+                      </>):(
+                        <Row key={obj.id + "b"}>
+                          <ReactAudioPlayer
+                            src={URL.createObjectURL(obj.url)}
+                            controls
+                            key={obj.id + "c"}
+                          />
+                        </Row>
+                      )}
+                      {access_token ? (<>
+                        <Row key={obj.id + "d"}>
+                          <div>
+                            <Button href={URL.createObjectURL(obj.url)} download={obj.nombres + "_" + obj.apellidos+"_original."+obj.url.type.substring(obj.url.type.length-3)}>Descargar original</Button>
+                            <Button href={URL.createObjectURL(obj.url2)} download={obj.nombres + "_" + obj.apellidos+"convertido.mp3"} disabled={!obj.convertido}>Descargar convertido</Button>
+                          </div>
+                        </Row>
+                      </>):(
+                        <></>
+                      )}
                     </ListGroup.Item>
                   </>
                 );
