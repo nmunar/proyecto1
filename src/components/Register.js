@@ -24,31 +24,7 @@ export default function Register(props) {
       return;
     }
 
-    fetch("http://127.0.0.1:5000/api/register", {
-      method: "POST",
-      body: JSON.stringify({
-        nombres: nombre,
-        apellidos: apellido,
-        email: email,
-        contrasena: password,
-      }),
-    })
-      .then((resp) => {
-        if (resp["status"] === 400) {
-          alert("El correo ya esta en uso");
-        } else {
-          return resp.json();
-        }
-      })
-      .then((json) => {
-        if (json === undefined) return;
-      })
-      .catch((err) => {
-        alert("Fallo en el registro: " + err);
-      });
-  }
-
-        fetch("http://127.0.0.1:5000/api/register",{
+    fetch("http://127.0.0.1:5000/api/register",{
             method:"POST",
             body: JSON.stringify({
                 nombres: nombre,
