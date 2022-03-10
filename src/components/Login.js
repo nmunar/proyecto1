@@ -35,7 +35,7 @@ export default function Login(props) {
         props.setLogged(true);
         window.location.reload();
       })
-      .cath((err) => {
+      .catch((err) => {
         alert("Failed login:" + err);
       });
   }

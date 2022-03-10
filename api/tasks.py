@@ -6,6 +6,8 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import os
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 from celery import Celery
 import ffmpeg
 from utils.conn import db_session
@@ -46,32 +48,25 @@ def convertir_a_mp3(path_origen: str, path_destino: str,emailTo,nombres):
 
 
 def enviar_email(emailFrom, emailFromPassword, emailTo, nombres):
-    content = ''' Hola {}, esperamos que estes bien.
-
-    Te informamos que tu voz ya ha sido procesada y publicada en la pagina del concurso.
-    Si tu voz es elegida como ganadora, te contactaremos a traves de este medio.
-
-    Un feliz dia.
-    SuperVoices.'''.format(nombres)
-
-    message = MIMEMultipart()
-    message['From'] = emailFrom
-    message['To'] = emailTo
-    message['Subject'] = 'Procesamiento de voz exitoso - SuperVoices'
-
-    message.attach(MIMEText(content, 'plain'))
-    session = smtplib.SMTP('smtp.gmail.com', 587)
+    mensaje = Mail(
+       from_email = emailFrom,
+        to_emails = emailTo,
+        subject='Procesamiento de voz exitoso - SuperVoices')
     
+    mensaje.dynamic_template_data = {'nombres': nombres}
 
-    session.starttls()
-    session.login(emailFrom, emailFromPassword)
-   
-    text = message.as_string()
-    session.sendmail(emailFrom, emailTo, text)
-   
+    mensaje.template_id = ''
 
-    session.quit()
+    try:
+        sg = SendGridAPIClient('')
+        response = sg.send(mensaje)
+        print(response.body)
+        print(response.headers)
+    except Exception as e:
+        print(e)
 
+
+    
 def mapVoz(xy):
     x,y = xy
     return y
