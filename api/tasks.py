@@ -42,7 +42,7 @@ def enviar_email(emailFrom, emailFromPassword, emailTo, nombres):
     mensaje.template_id = 'd-a54fcb7888b74574a46228371b9c7bf8'
 
     try:
-        sg = SendGridAPIClient('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')
+        sg = SendGridAPIClient('')
         response = sg.send(mensaje)
         print(response.body)
         print(response.headers)
