@@ -29,37 +29,34 @@ export default function HomeConcurso() {
   const [validated, setValidated] = useState(false);
   const [archVoz, setArchVoz] = useState({});
   const [postulacion, setPostularme] = useState(false);
-  
-  const [audios, setAudios] = useState([]);//--------
+
+  const [audios, setAudios] = useState([]); //--------
   const [currentPage, setCurrentPage] = useState(1);
   const [postsPerPage, setPostsPerPage] = useState(20);
 
-  const indexOfLastPost = currentPage*postsPerPage;
-  const indexOfFirstPost = indexOfLastPost-postsPerPage;
-  const currentPosts = audios.slice(indexOfFirstPost,indexOfLastPost);
+  const indexOfLastPost = currentPage * postsPerPage;
+  const indexOfFirstPost = indexOfLastPost - postsPerPage;
+  const currentPosts = audios.slice(indexOfFirstPost, indexOfLastPost);
 
   const paginate = (number) => {
-    setCurrentPage(number+1)
-  }
+    setCurrentPage(number + 1);
+  };
 
   const access_token = localStorage.getItem("access_token");
 
-  
   const [hizoFecth, setFecth] = useState(false);
 
   let { url } = useParams();
 
   useEffect(() => {
-
-
     async function getCData() {
-
-      if(access_token){
+      if (access_token) {
         //get concurso
-        console.log("asa")
-        let res = await fetch(`/api/concurso/${url}/auth`,{headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        }});
+        let res = await fetch(`/api/concurso/${url}/auth`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+        });
         let data = await res.json();
 
         if (res["status"] !== 200) {
@@ -72,9 +69,11 @@ export default function HomeConcurso() {
         setImg(data.imagen);
 
         //get voces
-        let resp = await fetch(`/api/voces/${data.id}/auth`,{headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        }});
+        let resp = await fetch(`/api/voces/${data.id}/auth`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+        });
         let json = await resp.json();
 
         if (resp["status"] !== 200) {
@@ -82,21 +81,25 @@ export default function HomeConcurso() {
           return;
         }
 
-        console.log(json);
         const vocesF = json["voces"];
         //archvivos convertidos
         let audios = [];
         for (let voz of vocesF) {
-          console.log(voz);
-          let respon = await fetch(`/api/audio/${voz.id}/auth`,{headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          }});
-          let responc = await fetch(`/api/audio/${voz.id}?convertido=1/authC`,{headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          }});
-          let responb = await fetch(`/api/audio/${voz.id}/authB`,{headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          }});
+          let respon = await fetch(`/api/audio/${voz.id}/auth`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+            },
+          });
+          let responc = await fetch(`/api/audio/${voz.id}?convertido=1/authC`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+            },
+          });
+          let responb = await fetch(`/api/audio/${voz.id}/authB`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+            },
+          });
           let responjson = await responb.json();
           let respblob = await respon.blob();
           let respcblob = await responc.blob();
@@ -110,17 +113,14 @@ export default function HomeConcurso() {
             fecha: fechC[0] + " Hora : " + fechC[1].split(".")[0],
             url: respblob,
             url2: respcblob,
-            convertido: responjson.convertido
+            convertido: responjson.convertido,
           });
         }
 
-        console.log(audios);
         setAudios(audios);
         setFecth(true);
-      }
-      else{
+      } else {
         //get concurso
-        console.log("lll")
         let res = await fetch(`/api/concurso/${url}`);
         let data = await res.json();
 
@@ -142,15 +142,18 @@ export default function HomeConcurso() {
           return;
         }
 
-        console.log(json);
         const vocesF = json["voces"];
         //archvivos convertidos
         let audios = [];
         for (let voz of vocesF) {
-          console.log(voz);
           let respon = await fetch(`/api/audio/${voz.id}?convertido=1`);
+          let responc = await fetch(`/api/convertido/${voz.id}`);
           let respblob = await respon.blob();
           let fechC = voz.fechaCreacion.split("T");
+
+          let respcblob = await responc.json();
+          console.log(respcblob);
+          console.log(respcblob.convertido);
           audios.push({
             id: voz.id,
             nombres: voz.nombres,
@@ -159,10 +162,9 @@ export default function HomeConcurso() {
             obs: voz.observaciones,
             fecha: fechC[0] + " Hora : " + fechC[1].split(".")[0],
             url: respblob,
+            convertido: respcblob.convertido,
           });
         }
-
-        console.log(audios);
         setAudios(audios);
         setFecth(true);
       }
@@ -183,76 +185,117 @@ export default function HomeConcurso() {
               {currentPosts.map((obj, index) => {
                 return (
                   <>
-                    <ListGroup.Item key={obj.id}>
-                      <Row key={obj.id + "a"}>
-                        <p>
-                          <b>Subido:</b> {obj.fecha} - <b>Nombre:</b>{" "}
-                          {obj.nombres + " " + obj.apellidos} -- <b>Email: </b>
-                          {obj.email}--{access_token ? (<><b>Estado: </b> {obj.convertido?"Convertida":"En proceso"}</>):(
-                        <></>
-                      )}
-                        </p>
-                        {obj.obs !== "" ? (
+                    {access_token || (!access_token && obj.convertido) ? (
+                      <ListGroup.Item key={obj.id}>
+                        <Row key={obj.id + "a"}>
                           <p>
-                            Observaciones: <i>{obj.obs}</i>
+                            <b>Subido:</b> {obj.fecha} - <b>Nombre:</b>{" "}
+                            {obj.nombres + " " + obj.apellidos} --{" "}
+                            <b>Email: </b>
+                            {obj.email}--
+                            {access_token ? (
+                              <>
+                                <b>Estado: </b>{" "}
+                                {obj.convertido ? "Convertida" : "En proceso"}
+                              </>
+                            ) : (
+                              <></>
+                            )}
                           </p>
+                          {obj.obs !== "" ? (
+                            <p>
+                              Observaciones: <i>{obj.obs}</i>
+                            </p>
+                          ) : (
+                            <></>
+                          )}
+                        </Row>
+                        {access_token ? (
+                          <>
+                            {obj.convertido ? (
+                              <>
+                                <Row key={obj.id + "b"}>
+                                  <ReactAudioPlayer
+                                    src={URL.createObjectURL(obj.url2)}
+                                    controls
+                                    key={obj.id + "c"}
+                                  />
+                                </Row>
+                              </>
+                            ) : (
+                              <></>
+                            )}
+                          </>
+                        ) : (
+                          <Row key={obj.id + "b"}>
+                            <ReactAudioPlayer
+                              src={URL.createObjectURL(obj.url)}
+                              controls
+                              key={obj.id + "c"}
+                            />
+                          </Row>
+                        )}
+                        {access_token ? (
+                          <>
+                            <Row key={obj.id + "d"}>
+                              <div>
+                                <Button
+                                  href={URL.createObjectURL(obj.url)}
+                                  download={
+                                    obj.nombres +
+                                    "_" +
+                                    obj.apellidos +
+                                    "_original." +
+                                    obj.url.type.substring(
+                                      obj.url.type.length - 3
+                                    )
+                                  }
+                                >
+                                  Descargar original
+                                </Button>
+                                <Button
+                                  href={URL.createObjectURL(obj.url2)}
+                                  download={
+                                    obj.nombres +
+                                    "_" +
+                                    obj.apellidos +
+                                    "convertido.mp3"
+                                  }
+                                  disabled={!obj.convertido}
+                                >
+                                  Descargar convertido
+                                </Button>
+                              </div>
+                            </Row>
+                          </>
                         ) : (
                           <></>
                         )}
-                      </Row>
-                      {access_token ? (<>
-                        {obj.convertido ? (<>
-                        <Row key={obj.id + "b"}>
-                          <ReactAudioPlayer
-                            src={URL.createObjectURL(obj.url2)}
-                            controls
-                            key={obj.id + "c"}
-                          />
-                        </Row>
-                        </>):(
-                        <></>
-                      )}
-                      </>):(
-                        <Row key={obj.id + "b"}>
-                          <ReactAudioPlayer
-                            src={URL.createObjectURL(obj.url)}
-                            controls
-                            key={obj.id + "c"}
-                          />
-                        </Row>
-                      )}
-                      {access_token ? (<>
-                        <Row key={obj.id + "d"}>
-                          <div>
-                            <Button href={URL.createObjectURL(obj.url)} download={obj.nombres + "_" + obj.apellidos+"_original."+obj.url.type.substring(obj.url.type.length-3)}>Descargar original</Button>
-                            <Button href={URL.createObjectURL(obj.url2)} download={obj.nombres + "_" + obj.apellidos+"convertido.mp3"} disabled={!obj.convertido}>Descargar convertido</Button>
-                          </div>
-                        </Row>
-                      </>):(
-                        <></>
-                      )}
-                    </ListGroup.Item>
+                      </ListGroup.Item>
+                    ) : (
+                      <></>
+                    )}
                   </>
                 );
               })}
             </ListGroup>
             <ReactPaginate
-            previousLabel={"<"}
-            nextLabel={">"}
-            breakLabel={"..."}
-            pageCount={Math.ceil(audios.length/postsPerPage)}
-            onPageChange={handlePageClick}
-            containerClassName={"pagination justify-content-center"}
-            pageClassName={"page-item"}
-            pageLinkClassName={"page-link"}
-            previousClassName={"page-item"}
-            previousLinkClassName={"page-link"}
-            nextClassName={"page-item"}
-            nextLinkClassName={"page-link"}
-            breakClassName={"page-item"}
-            breakLinkClassName={"page-link"}
-            activeClassName={"active"}
-          />
+              previousLabel={"<"}
+              nextLabel={">"}
+              breakLabel={"..."}
+              pageCount={Math.ceil(audios.length / postsPerPage)}
+              onPageChange={handlePageClick}
+              containerClassName={"pagination justify-content-center"}
+              pageClassName={"page-item"}
+              pageLinkClassName={"page-link"}
+              previousClassName={"page-item"}
+              previousLinkClassName={"page-link"}
+              nextClassName={"page-item"}
+              nextLinkClassName={"page-link"}
+              breakClassName={"page-item"}
+              breakLinkClassName={"page-link"}
+              activeClassName={"active"}
+            />
           </Container>
         </>
       );
@@ -273,23 +316,18 @@ export default function HomeConcurso() {
 
   const handlePageClick = (event) => {
     paginate(event.selected);
-    
   };
 
   async function subirPostulacion() {
     // fetch envio audio
     var data = new FormData();
     data.append("file", archVoz);
-    console.log(data);
-    console.log(archVoz);
     const response = await fetch("/api/audio", {
       method: "POST",
       body: data,
     });
 
     const json = await response.json();
-
-    console.log(json);
 
     const data2 = {
       email: emailE,
@@ -304,14 +342,12 @@ export default function HomeConcurso() {
       method: "POST",
       body: JSON.stringify(data2),
     });
-    console.log(res["status"]);
     if (res["status"] !== 201) {
       alert("No se pudo completar la postuación");
       setPostularme(false);
       return;
     }
     const json2 = await res.json();
-    console.log(json2);
     alert(
       "Hemos recibido tu voz y la estamos procesando para que sea publicada en la página del concurso y pueda ser posteriormente revisada por nuestro equipo de trabajo."
     );
@@ -323,7 +359,7 @@ export default function HomeConcurso() {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    if (nombreE == "" || apellidoE == "" || emailE == "" || archVoz == "") {
+    if (nombreE === "" || apellidoE === "" || emailE === "" || archVoz === "") {
       alert("Debe completar todos los campos.");
     } else {
       subirPostulacion();

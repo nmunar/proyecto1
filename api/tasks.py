@@ -1,13 +1,7 @@
-from email import message
-import email
-#from extensions import celery
 import subprocess
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-import os
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 from celery import Celery
-import ffmpeg
 from utils.conn import db_session
 from app import ArchivoVoz, Voz
 
@@ -27,17 +21,9 @@ class SqlAlchemyCloseHandlerTask(app.Task):
         db_session.remove()
 
 def convertir_a_mp3(path_origen: str, path_destino: str,emailTo,nombres):
-    dirname = os.getcwd()
-    #print(f'dirname {dirname}')
-    rel_origin = dirname + path_origen[1:].replace('/', '\\')
-    rel_destino = dirname + path_destino[1:].replace('/', '\\')
-    rel_origin = rel_origin.replace('\\', '/')
-    rel_destino = rel_destino.replace('\\', '/')
-    proc = subprocess.Popen(
-        ['ffmpeg', '-nostdin', '-y', '-i', rel_origin, rel_destino])
-    # print(proc)
-    proc.wait()
 
+    proc = subprocess.Popen(['ffmpeg', '-nostdin', '-y', '-i', path_origen, path_destino],stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    proc.wait()
 
     enviar_email(emailFrom, emailFromPassword,
             emailTo, nombres)
@@ -46,32 +32,25 @@ def convertir_a_mp3(path_origen: str, path_destino: str,emailTo,nombres):
 
 
 def enviar_email(emailFrom, emailFromPassword, emailTo, nombres):
-    content = ''' Hola {}, esperamos que estes bien.
-
-    Te informamos que tu voz ya ha sido procesada y publicada en la pagina del concurso.
-    Si tu voz es elegida como ganadora, te contactaremos a traves de este medio.
-
-    Un feliz dia.
-    SuperVoices.'''.format(nombres)
-
-    message = MIMEMultipart()
-    message['From'] = emailFrom
-    message['To'] = emailTo
-    message['Subject'] = 'Procesamiento de voz exitoso - SuperVoices'
-
-    message.attach(MIMEText(content, 'plain'))
-    session = smtplib.SMTP('smtp.gmail.com', 587)
+    mensaje = Mail(
+       from_email = emailFrom,
+        to_emails = emailTo,
+        subject='Procesamiento de voz exitoso - SuperVoices')
     
+    mensaje.dynamic_template_data = {'nombres': nombres}
 
-    session.starttls()
-    session.login(emailFrom, emailFromPassword)
-   
-    text = message.as_string()
-    session.sendmail(emailFrom, emailTo, text)
-   
+    mensaje.template_id = 'd-a54fcb7888b74574a46228371b9c7bf8'
 
-    session.quit()
+    try:
+        sg = SendGridAPIClient('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')
+        response = sg.send(mensaje)
+        print(response.body)
+        print(response.headers)
+    except Exception as e:
+        print(e)
 
+
+    
 def mapVoz(xy):
     x,y = xy
     return y

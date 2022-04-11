@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 engine = create_engine(
-    'postgresql://postgres:Nikitos99@localhost/concursos',
+    'postgresql://postgres:Nikitos99@concursos.cdqova1igbuq.us-east-1.rds.amazonaws.com/concursos',
     convert_unicode=True,
     pool_recycle=3600,
     pool_size=10,

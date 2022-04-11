@@ -19,7 +19,7 @@ export default function Register(props) {
       alert("Introduzca un correo válido");
       return;
     }
-    if (password != confirmPassword) {
+    if (password !== confirmPassword) {
       alert("Las contraseñas no coinciden");
       return;
     }
@@ -115,11 +115,11 @@ export default function Register(props) {
                 variant="primary"
                 onClick={() => {
                     if (
-                    nombre == "" ||
-                    apellido == "" ||
-                    email == "" ||
-                    password == "" ||
-                    confirmPassword == ""
+                    nombre === "" ||
+                    apellido === "" ||
+                    email === "" ||
+                    password === "" ||
+                    confirmPassword === ""
                     ) {
                     alert("Debe completar todos los campos.");
                     } else {

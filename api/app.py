@@ -23,27 +23,29 @@ POSTGRES = {
     'port': '5432',
 }
 
-UPLOAD_FOLDER = './audiosOriginales/'
+
+dirname = os.getcwd()
+dirname = dirname.replace('\\proyecto1\\api', '\\efs').replace('\\', '/')
+UPLOAD_FOLDER = dirname+'/audiosOriginales/'
+
 ALLOWED_EXTENSIONS = {'wav', 'mp3', 'aac', 'ogg'}
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'a random string'
 app.config['JWT_ACCESS_LIFESPAN'] = {'hours': 24}
 app.config['JWT_REFRESH_LIFESPAN'] = {'days': 30}
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Nikitos99@localhost/concursos'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Nikitos99@concursos.cdqova1igbuq.us-east-1.rds.amazonaws.com/concursos'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['CONVERT_FOLDER'] = './audiosConvertidos/'
+app.config['CONVERT_FOLDER'] = dirname+'/audiosConvertidos/'
 app.config['BROKER_URL'] = 'redis://localhost:6379/0'
 
 CORS(app)
 guard = flask_praetorian.Praetorian()
 
-
-
 db = SQLAlchemy(app)
 
 ma = Marshmallow(app)
-    #api = Api(app)
+#api = Api(app)
 
 app.app_context().push()
 
@@ -103,7 +105,6 @@ class Concurso(db.Model):
                             cascade="all, delete", lazy=1)
 
 # Voz
-
 
 
 class Voz(db.Model):
@@ -228,6 +229,9 @@ def concursos():
         nombre = req.get('nombre', None)
         imagen = req.get('imagen', None)
         url = req.get('url', None)
+        concursoURL = Concurso.query.filter_by(url=req.get('url')).first()
+        if concursoURL:
+            return {"error": "La URL del concurso ya se usa"}, 403
         fechaCreacion = datetime.now()
         fechaInicio = parser.parse(req.get('fechaInicio', None), ignoretz=True)
         fechaFin = parser.parse(req.get('fechaFin', None), ignoretz=True)
@@ -273,6 +277,10 @@ def concurso(idConcurso):
         if(fechaInicio > fechaFin):
             return {"error": "La fecha de inicio es mayor a la de fin"}, 403
         valorPagar = req.get('valorPagar', None)
+        concursoURL = Concurso.query.filter_by(url=req.get('url')).first()
+        if concursoURL and concursoURL.id != idConcurso:
+            return {"error": "La URL del concurso ya se usa"}, 403
+        url = req.get('url', None)
         guion = req.get('guion', None)
         recomendaciones = req.get('recomendaciones', None)
         concurso.nombre = nombre
@@ -280,6 +288,7 @@ def concurso(idConcurso):
         concurso.fechaInicio = fechaInicio
         concurso.fechaFin = fechaFin
         concurso.valorPagar = valorPagar
+        concurso.url = url
         concurso.guion = guion
         concurso.recomendaciones = recomendaciones
         db.session.commit()
@@ -392,8 +401,7 @@ def subir_voz():
     )
     db.session.add(voz)
     db.session.commit()
-    return schema_voz.dump(voz),201
-
+    return schema_voz.dump(voz), 201
 
 
 @app.route('/api/concurso/<string:url_c>/auth', methods=['GET'])
@@ -469,6 +477,18 @@ def vocesArchAuthB(id_v):
     else:
         return jsonify({"convertido": convertido}), 200
 
+
+@app.route('/api/convertido/<string:id_v>', methods=['GET'])
+def vocesConv(id_v):
+    archivo = ArchivoVoz.query.get_or_404(id_v)
+    voz = archivo.voz
+
+    convertido = archivo.convertido
+
+    if not voz or not archivo.voz:
+        return jsonify({"msg": "No se pudo encontrar el archivo solicitado"}), 404
+    else:
+        return jsonify({"convertido": convertido}), 200
 
 if __name__ == '_main_':
     app.run(debug=True)

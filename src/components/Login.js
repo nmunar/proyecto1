@@ -26,7 +26,7 @@ export default function Login(props) {
     })
       .then((resp) => resp.json())
       .then((json) => {
-        if (json["status_code"] == 401) {
+        if (json["status_code"] === 401) {
           alert("The email or the password doesn't match");
           return;
         }
@@ -76,7 +76,7 @@ export default function Login(props) {
             <Button
               variant="primary"
               onClick={() => {
-                if (email == "" || password == "") {
+                if (email === "" || password === "") {
                   alert("Debe completar todos los campos.");
                 } else {
                   login();

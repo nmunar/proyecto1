@@ -15,8 +15,21 @@ const TableComp = (props) => {
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
   const [valorPagar, setValorPagar] = useState(0);
+  const [url, setUrl] = useState("");
   const [guion, setGuion] = useState("");
   const [recomendaciones, setRecomendaciones] = useState("");
+
+  function isValidHttpUrl(string) {
+    let url;
+
+    try {
+      url = new URL(string);
+    } catch (_) {
+      return false;
+    }
+
+    return url.protocol === "http:" || url.protocol === "https:";
+  }
 
   return (
     <Container fluid>
@@ -54,6 +67,7 @@ const TableComp = (props) => {
                     setFechaInicio(obj.fechaInicio);
                     setFechaFin(obj.fechaFin);
                     setValorPagar(obj.valorPagar);
+                    setUrl(obj.url);
                     setGuion(obj.guion);
                     setRecomendaciones(obj.recomendaciones);
                   }}
@@ -153,6 +167,18 @@ const TableComp = (props) => {
             </Form.Group>
             <Form.Group
               className="mb-3"
+              controlId="formBasicURL"
+              onChange={(evt) => setUrl(evt.target.value)}
+            >
+              <Form.Label>URL</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Ingrese el path válido de la URL que desea tener su concurso"
+                defaultValue={url}
+              />
+            </Form.Group>
+            <Form.Group
+              className="mb-3"
               controlId="exampleForm.ControlTextarea1"
               onChange={(evt) => setGuion(evt.target.value)}
             >
@@ -175,29 +201,34 @@ const TableComp = (props) => {
               variant="primary"
               onClick={() => {
                 if (
-                  nombre == "" ||
-                  imagen == "" ||
-                  fechaInicio == "" ||
-                  fechaFin == "" ||
-                  valorPagar == 0 ||
-                  guion == "" ||
-                  recomendaciones == ""
+                  nombre === "" ||
+                  imagen === "" ||
+                  fechaInicio === "" ||
+                  fechaFin === "" ||
+                  valorPagar === 0 ||
+                  url === "" ||
+                  guion === "" ||
+                  recomendaciones === ""
                 ) {
                   alert("Debe completar todos los campos.");
                 } else {
-                  props.funcUpdate(
-                    id,
-                    nombre,
-                    imagen,
-                    fechaCreacion,
-                    fechaInicio,
-                    fechaFin,
-                    valorPagar,
-                    guion,
-                    recomendaciones
-                  );
-                  handleClose();
-                  window.location.reload();
+                  if (!isValidHttpUrl(imagen)) {
+                    alert("La URL de la imagen debe ser una válida.");
+                  } else {
+                    props.funcUpdate(
+                      id,
+                      nombre,
+                      imagen,
+                      fechaCreacion,
+                      fechaInicio,
+                      fechaFin,
+                      valorPagar,
+                      url,
+                      guion,
+                      recomendaciones
+                    );
+                    handleClose();
+                  }
                 }
               }}
             >
