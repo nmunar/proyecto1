@@ -15,6 +15,16 @@ import json
 import traceback
 from flask_praetorian import auth_required, current_user
 
+from botocore.config import Config
+import boto3
+from botocore import UNSIGNED
+
+# S3 configuration
+my_config = Config(
+    region_name='us-east-1'
+)
+s3 = boto3.resource('s3', config=Config(signature_version=UNSIGNED))
+
 POSTGRES = {
     'user': 'postgres',
     'pw': 'admin',
@@ -34,7 +44,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'a random string'
 app.config['JWT_ACCESS_LIFESPAN'] = {'hours': 24}
 app.config['JWT_REFRESH_LIFESPAN'] = {'days': 30}
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Nikitos99@concursos.cdqova1igbuq.us-east-1.rds.amazonaws.com/concursos'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:bd123@localhost:5432/concursos'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['CONVERT_FOLDER'] = dirname+'/audiosConvertidos/'
 app.config['BROKER_URL'] = 'redis://localhost:6379/0'
@@ -339,7 +349,6 @@ def vocesArch(id_v):
 
 @app.route('/api/audio', methods=['POST'])
 def audio():
-    print(request.files)
     if not 'file' in request.files:
         return jsonify({"msg": "La peticion debe tener un archivo"}), 404
     file = request.files['file']
@@ -349,22 +358,33 @@ def audio():
         return jsonify({"msg": "La extensión no es válida"}), 404
     else:
         filename = secure_filename(filen)
+        print(filename)
+        print(filen)
         archivo_voz = ArchivoVoz()
         db.session.add(archivo_voz)
         db.session.commit()
     try:
-        upload_directory = os.path.join(
-            app.config['UPLOAD_FOLDER'], '{}/'.format(archivo_voz.id))
-        convert_directory = os.path.join(
-            app.config['CONVERT_FOLDER'], '{}/'.format(archivo_voz.id))
-        os.makedirs(upload_directory, exist_ok=True)
-        os.makedirs(convert_directory, exist_ok=True)
-        path = os.path.join(upload_directory, filename)
-        convert_path = os.path.join(
-            convert_directory, '{}.mp3'.format(os.path.splitext(filename)[0]))
-        archivo_voz.archivoOriginal = path
-        archivo_voz.archivoConvertido = convert_path
-        file.save(path)
+        # upload_directory = os.path.join(
+        #     app.config['UPLOAD_FOLDER'], '{}/'.format(archivo_voz.id))
+        # convert_directory = os.path.join(
+        #     app.config['CONVERT_FOLDER'], '{}/'.format(archivo_voz.id))
+        # os.makedirs(upload_directory, exist_ok=True)
+        # os.makedirs(convert_directory, exist_ok=True)
+        # path = os.path.join(upload_directory, filename)
+        # convert_path = os.path.join(
+        #     convert_directory, '{}.mp3'.format(os.path.splitext(filename)[0]))
+        # archivo_voz.archivoOriginal = path
+        # archivo_voz.archivoConvertido = convert_path
+        # file.save(path)
+        # upload original file to s3
+        s3.Bucket(
+            'audios-supervoices').put_object(Key='audios/{}/{}'.format(archivo_voz.id, filename), Body=file)
+        archivo_voz.archivoOriginal = 'https://audios-supervoices.s3.amazonaws.com/audios/{}/{}'.format(
+            archivo_voz.id, filename)
+        filename_converted = filename.split('.')[0]
+        filename_converted += '.mp3'
+        archivo_voz.archivoConvertido = 'https://audios-supervoices.s3.amazonaws.com/audios/{}/{}'.format(
+            archivo_voz.id, filename_converted)
         db.session.commit()
         return schema_archivoVoz.dump(archivo_voz), 201
     except:
@@ -489,6 +509,18 @@ def vocesConv(id_v):
         return jsonify({"msg": "No se pudo encontrar el archivo solicitado"}), 404
     else:
         return jsonify({"convertido": convertido}), 200
+
+
+@app.route('/api/audios3/<int:id>', methods=['GET'])
+def get_audio_s3(id):
+    print(id)
+    audio = ArchivoVoz.query.get(id)
+    print(audio)
+    if audio:
+        return schema_archivoVoz.dumps(audio), 201
+    else:
+        return jsonify({"msg": "No se pudo encontrar el archivo solicitado"}), 404
+
 
 if __name__ == '_main_':
     app.run(debug=True)

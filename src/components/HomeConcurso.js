@@ -16,6 +16,7 @@ import {
 import "bootstrap/dist/css/bootstrap.css";
 import ReactAudioPlayer from "react-audio-player";
 import ReactPaginate from "react-paginate";
+import axios from "axios";
 
 export default function HomeConcurso() {
   const [concurso, setConcurso] = useState({});
@@ -104,6 +105,22 @@ export default function HomeConcurso() {
           let respblob = await respon.blob();
           let respcblob = await responc.blob();
           let fechC = voz.fechaCreacion.split("T");
+
+          //Get audio (archivo)
+          let audio_url_original = "";
+          let audio_url_convertido = "";
+          await axios
+            .get(`/api/audios3/${voz.id}`)
+            .then((response) => {
+              // Obtenemos los datos
+              audio_url_original = response.data["archivoOriginal"];
+              audio_url_convertido = response.data["archivoConvertido"];
+            })
+            .catch((e) => {
+              // Capturamos los errores
+              console.log(e);
+            });
+
           audios.push({
             id: voz.id,
             nombres: voz.nombres,
@@ -114,6 +131,8 @@ export default function HomeConcurso() {
             url: respblob,
             url2: respcblob,
             convertido: responjson.convertido,
+            urlAudioOriginal: audio_url_original,
+            urlAudioConvertido: audio_url_convertido,
           });
         }
 
@@ -152,8 +171,6 @@ export default function HomeConcurso() {
           let fechC = voz.fechaCreacion.split("T");
 
           let respcblob = await responc.json();
-          console.log(respcblob);
-          console.log(respcblob.convertido);
           audios.push({
             id: voz.id,
             nombres: voz.nombres,
@@ -240,7 +257,7 @@ export default function HomeConcurso() {
                             <Row key={obj.id + "d"}>
                               <div>
                                 <Button
-                                  href={URL.createObjectURL(obj.url)}
+                                  href={obj.urlAudioOriginal}
                                   download={
                                     obj.nombres +
                                     "_" +
@@ -254,7 +271,7 @@ export default function HomeConcurso() {
                                   Descargar original
                                 </Button>
                                 <Button
-                                  href={URL.createObjectURL(obj.url2)}
+                                  href={obj.urlAudioConvertido}
                                   download={
                                     obj.nombres +
                                     "_" +
