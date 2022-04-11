@@ -39,7 +39,7 @@ def enviar_email(emailFrom, emailFromPassword, emailTo, nombres):
     
     mensaje.dynamic_template_data = {'nombres': nombres}
 
-    mensaje.template_id = 'd-a54fcb7888b74574a46228371b9c7bf8'
+    mensaje.template_id = ''
 
     try:
         sg = SendGridAPIClient('')
