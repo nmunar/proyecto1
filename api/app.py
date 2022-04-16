@@ -3,7 +3,7 @@ from http.client import ResponseNotReady
 import os
 from venv import create
 from xmlrpc.client import DateTime
-from flask import Flask, jsonify, request, send_file
+from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_restful import Api, Resource
@@ -318,7 +318,7 @@ def sort_by_key(list):
 def vocesArch(id_v):
     archivo = table_archivo_voz.get_item(Key={'id': id_v})['Item']
 
-    return send_file(archivo['archivoConvertido']), 200
+    return archivo['archivoConvertido'], 200
 
 
 @app.route('/api/convertido/<string:id_v>', methods=['GET'])
@@ -334,7 +334,7 @@ def vocesConv(id_v):
 def vocesArchAuth(id_v):
     user = current_user()
     archivo = table_archivo_voz.get_item(Key={'id': id_v})['Item']
-    return send_file(archivo['archivoOriginal']), 200
+    return archivo['archivoOriginal'], 200
 
 
 @app.route('/api/audio/<string:id_v>/authB', methods=['GET'])
@@ -352,18 +352,17 @@ def vocesArchAuthB(id_v):
 @auth_required
 def vocesArchAuthC(id_v):
     user = current_user()
+    print(id_v)
     archivo = table_archivo_voz.get_item(Key={'id': id_v})['Item']
 
-    return send_file(archivo['archivoConvertido']), 200
+    return archivo['archivoConvertido'], 200
 
 
 @app.route('/api/audios3/<string:id>', methods=['GET'])
 def get_audio_s3(id):
-    print(id)
     audio = table_archivo_voz.get_item(Key={'id': id})['Item']
-    print(audio)
     if audio:
-        return json.dumps(audio), 201
+        return json.dumps(audio), 200
     else:
         return jsonify({"msg": "No se pudo encontrar el archivo solicitado"}), 404
 
@@ -380,7 +379,6 @@ def subir_voz():
     concursoId = req.get('concursoId', None)
 
     try:
-        
         item = {
             'id': archivoId,
             'fechaCreacion': str(fechaCreacion),
