@@ -3,6 +3,7 @@
 __pycache__/
 
 /api/.env
+.env
 
 # dependencies
 /node_modules
