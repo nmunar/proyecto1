@@ -104,7 +104,7 @@ export default function HomeConcurso() {
           let responjson = await responb.json();
           let respblob = await respon.blob();
           let respcblob = await responc.blob();
-          let fechC = voz.fechaCreacion.split("T");
+          let fechC = voz.fechaCreacion.split(" ");
 
           //Get audio (archivo)
           let audio_url_original = "";
@@ -168,7 +168,7 @@ export default function HomeConcurso() {
           let respon = await fetch(`/api/audio/${voz.id}?convertido=1`);
           let responc = await fetch(`/api/convertido/${voz.id}`);
           let respblob = await respon.blob();
-          let fechC = voz.fechaCreacion.split("T");
+          let fechC = voz.fechaCreacion.split(" ");
 
           let respcblob = await responc.json();
           audios.push({
