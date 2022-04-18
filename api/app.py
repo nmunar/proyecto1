@@ -416,6 +416,8 @@ def audio():
             # upload files to s3
             filename = secure_filename(filen)
             archivo_voz_id = str(uuid.uuid4())
+            print("ARCHIVOOOOOOOOOOOOOOOOOOO")
+            print(type(file))
             s3.Bucket(
                 'audios-supervoices').put_object(Key='audios/{}/{}'.format(archivo_voz_id, filename), Body=file)
             archivo_voz_ruta_original = 'https://audios-supervoices.s3.amazonaws.com/audios/{}/{}'.format(
@@ -439,9 +441,6 @@ def audio():
                 MessageDeduplicationId='archivo_voz',
                 MessageGroupId='archivo_voz'
             )
-
-            print(table_archivo_voz.get_item(
-                Key={'id': archivo_voz_id})['Item'])
 
             return {"id": archivo_voz_id}, 201
         except:
