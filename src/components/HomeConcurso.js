@@ -171,6 +171,22 @@ export default function HomeConcurso() {
           let fechC = voz.fechaCreacion.split(" ");
 
           let respcblob = await responc.json();
+
+          //Get audio (archivo)
+          let audio_url_original = "";
+          let audio_url_convertido = "";
+          await axios
+            .get(`/api/audios3/${voz.id}`)
+            .then((response) => {
+              // Obtenemos los datos
+              audio_url_original = response.data["archivoOriginal"];
+              audio_url_convertido = response.data["archivoConvertido"];
+            })
+            .catch((e) => {
+              // Capturamos los errores
+              console.log(e);
+            });
+
           audios.push({
             id: voz.id,
             nombres: voz.nombres,
@@ -180,6 +196,8 @@ export default function HomeConcurso() {
             fecha: fechC[0] + " Hora : " + fechC[1].split(".")[0],
             url: respblob,
             convertido: respcblob.convertido,
+            urlAudioOriginal: audio_url_original,
+            urlAudioConvertido: audio_url_convertido,
           });
         }
         setAudios(audios);
@@ -233,7 +251,7 @@ export default function HomeConcurso() {
                               <>
                                 <Row key={obj.id + "b"}>
                                   <ReactAudioPlayer
-                                    src={URL.createObjectURL(obj.url2)}
+                                    src={obj.urlAudioConvertido}
                                     controls
                                     key={obj.id + "c"}
                                   />
@@ -246,7 +264,7 @@ export default function HomeConcurso() {
                         ) : (
                           <Row key={obj.id + "b"}>
                             <ReactAudioPlayer
-                              src={URL.createObjectURL(obj.url)}
+                              src={obj.urlAudioConvertido}
                               controls
                               key={obj.id + "c"}
                             />

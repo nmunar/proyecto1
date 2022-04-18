@@ -23,16 +23,22 @@ from botocore.config import Config
 from boto3.dynamodb.conditions import Key, Attr
 import boto3
 from botocore import UNSIGNED
-from dotenv import load_dotenv, find_dotenv
 
 # S3 configuration
 my_config = Config(
     region_name='us-east-1',
 )
 s3 = boto3.resource('s3', config=Config(signature_version=UNSIGNED))
-dynamodb = boto3.resource('dynamodb', aws_access_key_id=os.environ.get('AWS_ACCSESS_KEY_ID'), aws_secret_access_key=os.environ.get('AWS_SECRET_ACCSESS_KEY'),
-                          aws_session_token=os.environ.get('AWS_SESSION_TOKEN'), region_name=os.environ.get('REGION_NAME'))
+dynamodb = boto3.resource('dynamodb', aws_access_key_id=os.environ.get('AWS_ACCSESS_KEY_ID_DYNAMO'), aws_secret_access_key=os.environ.get('AWS_SECRET_ACCSESS_KEY_DYNAMO'),
+                          aws_session_token=os.environ.get('AWS_SESSION_TOKEN_DYNAMO'), region_name=os.environ.get('REGION_NAME_DYNAMO'))
+sqs = boto3.resource('sqs', region_name=os.environ.get('REGION_NAME_SQS'),
+                     aws_access_key_id=os.environ.get(
+                         'AWS_ACCSESS_KEY_ID_SQS'),
+                     aws_secret_access_key=os.environ.get(
+    'AWS_SECRET_ACCSESS_KEY_SQS'),
+    aws_session_token=os.environ.get('AWS_SESSION_TOKEN_SQS'))
 
+queue = sqs.get_queue_by_name(QueueName='supervoices.fifo')
 
 ALLOWED_EXTENSIONS = {'wav', 'mp3', 'aac', 'ogg'}
 
@@ -40,7 +46,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'a random string'
 app.config['JWT_ACCESS_LIFESPAN'] = {'hours': 24}
 app.config['JWT_REFRESH_LIFESPAN'] = {'days': 30}
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Nikitos99@localhost:5432/concursos'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:bd123@localhost:5432/concursos'
 app.config['BROKER_URL'] = 'redis://localhost:6379/0'
 
 CORS(app)
@@ -49,7 +55,7 @@ guard = flask_praetorian.Praetorian()
 db = SQLAlchemy(app)
 
 ma = Marshmallow(app)
-#api = Api(app)
+# api = Api(app)
 
 app.app_context().push()
 
@@ -65,25 +71,25 @@ class Administrador(db.Model):
     email = db.Column(db.String(120), nullable=0, unique=1)
     contrasena = db.Column(db.String(300), nullable=0)
     # relaciones
-    #concursos = db.relationship('Concurso', backref='administrador', lazy=1)
+    # concursos = db.relationship('Concurso', backref='administrador', lazy=1)
 
-    @property
+    @ property
     def rolenames(self):
         return []
 
-    @property
+    @ property
     def password(self):
         return self.contrasena
 
-    @classmethod
+    @ classmethod
     def lookup(cls, email):
         return cls.query.filter_by(email=email).one_or_none()
 
-    @classmethod
+    @ classmethod
     def identify(cls, id):
         return cls.query.get(id)
 
-    @property
+    @ property
     def identity(self):
         return self.id
 
@@ -115,7 +121,7 @@ guard.init_app(app, Administrador)
 # userAdmin
 
 
-@app.route('/api/login', methods=['POST'])
+@ app.route('/api/login', methods=['POST'])
 def login():
     req = json.loads(request.data)
     email = req.get('email', None)
@@ -124,7 +130,7 @@ def login():
     return jsonify({'access_token': guard.encode_jwt_token(admin)}), 200
 
 
-@app.route('/api/register', methods=['POST'])
+@ app.route('/api/register', methods=['POST'])
 def register():
     req = json.loads(request.data)
     nombres = req.get('nombres', None)
@@ -159,8 +165,8 @@ def register():
 # Concursos
 
 
-@app.route('/api/concursos', methods=['GET', 'POST'])
-@auth_required
+@ app.route('/api/concursos', methods=['GET', 'POST'])
+@ auth_required
 def concursos():
     user = current_user()
     if request.method == 'GET':
@@ -209,8 +215,8 @@ def concursos():
         return {"id": id_concurso, "fechaCreacion": str(fechaCreacion)}, 201
 
 
-@app.route('/api/concursos/<string:idConcurso>', methods=['GET', 'PUT', 'DELETE'])
-@auth_required
+@ app.route('/api/concursos/<string:idConcurso>', methods=['GET', 'PUT', 'DELETE'])
+@ auth_required
 def concurso(idConcurso):
     user = current_user()
     concurso = table_concurso.query(
@@ -251,13 +257,12 @@ def concurso(idConcurso):
 
         table_concurso.put_item(Item=concurso)
 
-        return concurso, 200
+        return json.dump(concurso), 200
     else:
-
         return '', 204
 
 
-@app.route('/api/concurso/<string:url_c>', methods=['GET'])
+@ app.route('/api/concurso/<string:url_c>', methods=['GET'])
 def concursoConUrl(url_c):
     now = datetime.now()
     concurso = json.dumps(table_concurso.scan(FilterExpression=Attr(
@@ -267,8 +272,8 @@ def concursoConUrl(url_c):
     return concurso, 200
 
 
-@app.route('/api/concurso/<string:url_c>/auth', methods=['GET'])
-@auth_required
+@ app.route('/api/concurso/<string:url_c>/auth', methods=['GET'])
+@ auth_required
 def concursoConUrlAuth(url_c):
     user = current_user()
     now = datetime.now()
@@ -279,7 +284,7 @@ def concursoConUrlAuth(url_c):
     return concurso, 200
 
 
-@app.route('/api/voces/<string:id_c>', methods=['GET'])
+@ app.route('/api/voces/<string:id_c>', methods=['GET'])
 def voces(id_c):
     try:
         voces = table_voz.scan(FilterExpression=Attr(
@@ -294,8 +299,8 @@ def voces(id_c):
         return jsonify({"msg": "Este concurso aún no tiene voces de partcipantes"}), 404
 
 
-@app.route('/api/voces/<string:id_c>/auth', methods=['GET'])
-@auth_required
+@ app.route('/api/voces/<string:id_c>/auth', methods=['GET'])
+@ auth_required
 def vocesAuth(id_c):
     user = current_user()
     try:
@@ -315,14 +320,14 @@ def sort_by_key(list):
     return list['fechaCreacion']
 
 
-@app.route('/api/audio/<string:id_v>', methods=['GET'])
+@ app.route('/api/audio/<string:id_v>', methods=['GET'])
 def vocesArch(id_v):
     archivo = table_archivo_voz.get_item(Key={'id': id_v})['Item']
 
     return archivo['archivoConvertido'], 200
 
 
-@app.route('/api/convertido/<string:id_v>', methods=['GET'])
+@ app.route('/api/convertido/<string:id_v>', methods=['GET'])
 def vocesConv(id_v):
     archivo = table_archivo_voz.get_item(Key={'id': id_v})['Item']
     convertido = archivo['convertido']
@@ -330,16 +335,16 @@ def vocesConv(id_v):
     return jsonify({"convertido": convertido}), 200
 
 
-@app.route('/api/audio/<string:id_v>/auth', methods=['GET'])
-@auth_required
+@ app.route('/api/audio/<string:id_v>/auth', methods=['GET'])
+@ auth_required
 def vocesArchAuth(id_v):
     user = current_user()
     archivo = table_archivo_voz.get_item(Key={'id': id_v})['Item']
     return archivo['archivoOriginal'], 200
 
 
-@app.route('/api/audio/<string:id_v>/authB', methods=['GET'])
-@auth_required
+@ app.route('/api/audio/<string:id_v>/authB', methods=['GET'])
+@ auth_required
 def vocesArchAuthB(id_v):
     user = current_user()
     archivo = table_archivo_voz.get_item(Key={'id': id_v})['Item']
@@ -349,8 +354,8 @@ def vocesArchAuthB(id_v):
     return jsonify({"convertido": convertido}), 200
 
 
-@app.route('/api/audio/<string:id_v>/authC', methods=['GET'])
-@auth_required
+@ app.route('/api/audio/<string:id_v>/authC', methods=['GET'])
+@ auth_required
 def vocesArchAuthC(id_v):
     user = current_user()
     print(id_v)
@@ -359,7 +364,7 @@ def vocesArchAuthC(id_v):
     return archivo['archivoConvertido'], 200
 
 
-@app.route('/api/audios3/<string:id>', methods=['GET'])
+@ app.route('/api/audios3/<string:id>', methods=['GET'])
 def get_audio_s3(id):
     audio = table_archivo_voz.get_item(Key={'id': id})['Item']
     if audio:
@@ -368,7 +373,7 @@ def get_audio_s3(id):
         return jsonify({"msg": "No se pudo encontrar el archivo solicitado"}), 404
 
 
-@app.route('/api/voz', methods=['POST'])
+@ app.route('/api/voz', methods=['POST'])
 def subir_voz():
     fechaCreacion = datetime.now()
     req = json.loads(request.data)
@@ -380,7 +385,6 @@ def subir_voz():
     concursoId = req.get('concursoId', None)
 
     try:
-
         item = {
             'id': archivoId,
             'fechaCreacion': str(fechaCreacion),
@@ -397,7 +401,8 @@ def subir_voz():
     except:
         return 'Resource (Concurso or Archivo_Voz) not found.', 404
 
-@app.route('/api/audio', methods=['POST'])
+
+@ app.route('/api/audio', methods=['POST'])
 def audio():
     if not 'file' in request.files:
         return jsonify({"msg": "La peticion debe tener un archivo"}), 404
@@ -411,6 +416,8 @@ def audio():
             # upload files to s3
             filename = secure_filename(filen)
             archivo_voz_id = str(uuid.uuid4())
+            print("ARCHIVOOOOOOOOOOOOOOOOOOO")
+            print(type(file))
             s3.Bucket(
                 'audios-supervoices').put_object(Key='audios/{}/{}'.format(archivo_voz_id, filename), Body=file)
             archivo_voz_ruta_original = 'https://audios-supervoices.s3.amazonaws.com/audios/{}/{}'.format(
@@ -428,10 +435,18 @@ def audio():
             }
             table_archivo_voz.put_item(Item=item)
 
+            # post to sqs
+            queue.send_message(
+                MessageBody=archivo_voz_id,
+                MessageDeduplicationId='archivo_voz',
+                MessageGroupId='archivo_voz'
+            )
+
             return {"id": archivo_voz_id}, 201
         except:
             traceback.print_exc()
             return jsonify({"msg": "Error guardando el archivo"}), 500
+
 
 if __name__ == '_main_':
     app.run(debug=True)
