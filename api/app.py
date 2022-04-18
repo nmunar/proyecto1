@@ -1,19 +1,12 @@
-from enum import unique
-from http.client import ResponseNotReady
+
 import os
-from venv import create
-from xmlrpc.client import DateTime
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
-from flask_restful import Api, Resource
 from datetime import datetime
 from dateutil import parser
-from gevent import config
-from sqlalchemy import true
 from werkzeug.utils import secure_filename
 import flask_praetorian
-from marshmallow_enum import EnumField
 from flask_cors.extension import CORS
 import json
 import traceback
@@ -46,7 +39,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'a random string'
 app.config['JWT_ACCESS_LIFESPAN'] = {'hours': 24}
 app.config['JWT_REFRESH_LIFESPAN'] = {'days': 30}
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:bd123@localhost:5432/concursos'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Nikitos99@concursos.cdqova1igbuq.us-east-1.rds.amazonaws.com/concursos',
 app.config['BROKER_URL'] = 'redis://localhost:6379/0'
 
 CORS(app)
