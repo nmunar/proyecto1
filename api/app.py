@@ -16,7 +16,9 @@ from botocore.config import Config
 from boto3.dynamodb.conditions import Key, Attr
 import boto3
 from botocore import UNSIGNED
+from dotenv import load_dotenv
 
+load_dotenv()
 # S3 configuration
 my_config = Config(
     region_name='us-east-1',
