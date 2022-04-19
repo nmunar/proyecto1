@@ -22,13 +22,13 @@ import uuid
 from botocore.config import Config
 from boto3.dynamodb.conditions import Key, Attr
 import boto3
-from botocore import UNSIGNED
 
-# S3 configuration
-my_config = Config(
-    region_name='us-east-1',
-)
-s3 = boto3.resource('s3', config=Config(signature_version=UNSIGNED))
+s3 = boto3.resource('s3', region_name=os.environ.get('REGION_NAME_S3'),
+                    aws_access_key_id=os.environ.get(
+    'AWS_ACCSESS_KEY_ID_S3'),
+    aws_secret_access_key=os.environ.get(
+    'AWS_SECRET_ACCSESS_KEY_S3'),
+    aws_session_token=os.environ.get('AWS_SESSION_TOKEN_S3'))
 dynamodb = boto3.resource('dynamodb', aws_access_key_id=os.environ.get('AWS_ACCSESS_KEY_ID_DYNAMO'), aws_secret_access_key=os.environ.get('AWS_SECRET_ACCSESS_KEY_DYNAMO'),
                           aws_session_token=os.environ.get('AWS_SESSION_TOKEN_DYNAMO'), region_name=os.environ.get('REGION_NAME_DYNAMO'))
 sqs = boto3.resource('sqs', region_name=os.environ.get('REGION_NAME_SQS'),
@@ -416,15 +416,13 @@ def audio():
             # upload files to s3
             filename = secure_filename(filen)
             archivo_voz_id = str(uuid.uuid4())
-            print("ARCHIVOOOOOOOOOOOOOOOOOOO")
-            print(type(file))
             s3.Bucket(
                 'audios-supervoices').put_object(Key='audios/{}/{}'.format(archivo_voz_id, filename), Body=file)
-            archivo_voz_ruta_original = 'https://audios-supervoices.s3.amazonaws.com/audios/{}/{}'.format(
+            archivo_voz_ruta_original = 'https://d2st21ukupex34.cloudfront.net/audios/{}/{}'.format(
                 archivo_voz_id, filename)
             filename_converted = filename.split('.')[0]
             filename_converted += '.mp3'
-            archivo_voz_ruta_convertido = 'https://audios-supervoices.s3.amazonaws.com/audios/{}/{}'.format(
+            archivo_voz_ruta_convertido = 'https://d2st21ukupex34.cloudfront.net/audios/{}/{}'.format(
                 archivo_voz_id, filename_converted)
 
             item = {
