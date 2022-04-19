@@ -284,7 +284,11 @@ def voces(id_c):
     try:
         voces = table_voz.scan(FilterExpression=Attr(
             'concursoId').eq(id_c))['Items']
-        sorted(voces, key=sort_by_key)
+
+        voces.sort(key=lambda x: x["fechaCreacion"], reverse =True)
+
+        #voces.sort(key=extract_sortDate, reverse =True)
+        
 
         if not voces:
             return jsonify({"msg": "Este concurso aún no tiene voces de partcipantes"}), 404
@@ -301,7 +305,8 @@ def vocesAuth(id_c):
     try:
         voces = table_voz.scan(FilterExpression=Attr(
             'concursoId').eq(id_c))['Items']
-        sorted(voces, key=sort_by_key)
+        
+        voces.sort(key=lambda x: x["fechaCreacion"], reverse =True)
 
         if not voces:
             return jsonify({"msg": "Este concurso aún no tiene voces de partcipantes"}), 404
@@ -310,9 +315,12 @@ def vocesAuth(id_c):
     except:
         return jsonify({"msg": "Este concurso aún no tiene voces de partcipantes"}), 404
 
+def extract_sortDate(json):
+    try:
+        return parser.parse(json['fechaCreacion'])
+    except KeyError:
+        return 0
 
-def sort_by_key(list):
-    return list['fechaCreacion']
 
 
 @ app.route('/api/audio/<string:id_v>', methods=['GET'])
