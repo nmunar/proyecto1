@@ -2,8 +2,6 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from celery import Celery
 import boto3
-from botocore import UNSIGNED
-from botocore.config import Config
 import os
 from dotenv import load_dotenv
 import json
@@ -20,10 +18,13 @@ emailFromPassword = 'sv123noreply!'
 
 ip_front = 'localhost:5000'
 
-my_config = Config(
-    region_name='us-east-1',
-)
-s3 = boto3.resource('s3', config=Config(signature_version=UNSIGNED))
+
+s3 = boto3.resource('s3', region_name=os.environ.get('REGION_NAME_S3'),
+                    aws_access_key_id=os.environ.get(
+    'AWS_ACCSESS_KEY_ID_S3'),
+    aws_secret_access_key=os.environ.get(
+    'AWS_SECRET_ACCSESS_KEY_S3'),
+    aws_session_token=os.environ.get('AWS_SESSION_TOKEN_S3'))
 dynamodb = boto3.resource('dynamodb', region_name=os.environ.get('REGION_NAME_DYNAMO'),
                           aws_access_key_id=os.environ.get(
     'AWS_ACCSESS_KEY_ID_DYNAMO'),
@@ -63,7 +64,7 @@ def convertir_a_mp3(path_origen: str, path_destino: str, emailTo, nombres, id: s
             'audios-supervoices').put_object(Key='audios/{}/{}'.format(id, file_name_to_s3), Body=contents)
         os.remove('./audiosOriginales/{}.{}'.format(id, extension))
 
-    enviar_email(emailFrom, emailFromPassword, emailTo, nombres)
+    #enviar_email(emailFrom, emailFromPassword, emailTo, nombres)
 
 
 def enviar_email(emailFrom, emailFromPassword, emailTo, nombres):
@@ -76,7 +77,6 @@ def enviar_email(emailFrom, emailFromPassword, emailTo, nombres):
     mensaje.template_id = os.environ.get('TEMPLATE_ID_SENDGRID')
     try:
         sg = SendGridAPIClient(os.environ.get('API_CLIENT_SENDGRID'))
-        #response = sg.send(mensaje)
         sg.send(mensaje)
     except Exception as e:
         print(e)
