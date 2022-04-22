@@ -124,6 +124,13 @@ def process_audio_files():
 
         while i < len(response['Messages']):
             message = response['Messages'][i]
+            receipt_handle = message['ReceiptHandle']
+
+            sqs.delete_message(
+                QueueUrl='https://sqs.us-east-1.amazonaws.com/398814904431/supervoices.fifo',
+                ReceiptHandle=receipt_handle
+            )
+            
             archivo_voz_json = table_archivo_voz.get_item(
                 Key={'id': message['Body']})['Item']
             voz_json = table_voz.get_item(Key={'id': message['Body']})['Item']
@@ -133,13 +140,6 @@ def process_audio_files():
                 json.dumps(voz_json), object_hook=lambda d: SimpleNamespace(**d))
             tuple_voz_archivo = (voz_object, archivo_voz_object)
             pending_voices.append(tuple_voz_archivo)
-
-            receipt_handle = message['ReceiptHandle']
-
-            sqs.delete_message(
-                QueueUrl='https://sqs.us-east-1.amazonaws.com/398814904431/supervoices.fifo',
-                ReceiptHandle=receipt_handle
-            )
             i += 1
     except:
         print('SQS: no messages')
