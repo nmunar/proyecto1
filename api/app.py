@@ -115,7 +115,7 @@ schema_administradores = Administrador_Schema(many=True)
 guard.init_app(app, Administrador)
 
 # userAdmin
-@app.route
+@app.route('/')
 @cross_origin
 def serve():
     return send_from_directory(app.static_folder,'index.html')
