@@ -1,6 +1,7 @@
 
 import os
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
+from flask_cors import cross_origin
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from datetime import datetime
@@ -37,7 +38,7 @@ queue = sqs.get_queue_by_name(QueueName='supervoices.fifo')
 
 ALLOWED_EXTENSIONS = {'wav', 'mp3', 'aac', 'ogg'}
 
-app = Flask(__name__)
+app = Flask(__name__,static_folder='../build',static_url_path='')
 app.config['SECRET_KEY'] = 'a random string'
 app.config['JWT_ACCESS_LIFESPAN'] = {'hours': 24}
 app.config['JWT_REFRESH_LIFESPAN'] = {'days': 30}
@@ -114,7 +115,10 @@ schema_administradores = Administrador_Schema(many=True)
 guard.init_app(app, Administrador)
 
 # userAdmin
-
+@app.route
+@cross_origin
+def serve():
+    return send_from_directory(app.static_folder,'index.html')
 
 @ app.route('/api/login', methods=['POST'])
 def login():
