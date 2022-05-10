@@ -119,6 +119,10 @@ guard.init_app(app, Administrador)
 def serve():
     return send_from_directory(app.static_folder,'index.html')
 
+@app.errorhandler(404)
+def not_found(e):
+    return app.send_static_file('index.html')
+
 @ app.route('/api/login', methods=['POST'])
 def login():
     req = json.loads(request.data)
@@ -453,4 +457,4 @@ def audio():
 
 
 if __name__ == '_main_':
-    app.run(debug=True)
+    app.run(debug=False)
